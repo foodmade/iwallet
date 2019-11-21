@@ -2,6 +2,8 @@ package com.qkl.wallet.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.qkl.wallet.common.JedisKey;
+import com.qkl.wallet.common.RedisUtil;
 import com.qkl.wallet.common.exception.InvalidException;
 import com.qkl.wallet.common.walletUtil.LightWallet;
 import com.qkl.wallet.common.walletUtil.outModel.WalletAddressInfo;
@@ -27,6 +29,7 @@ import org.web3j.utils.Numeric;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -41,6 +44,8 @@ public class WalletServiceImpl implements WalletService {
 
     @Autowired
     private Web3j web3j;
+    @Autowired
+    private RedisUtil redisUtil;
 
     @Override
     public ResultBean<CreateWalletResponse> createWallet() {
@@ -69,10 +74,27 @@ public class WalletServiceImpl implements WalletService {
             if(!myToken.isValid()){
                 throw new InvalidException("Contract address invalid. Please contact the administrator to redeploy");
             }
+
+            //Cache this order basis info.
+            cacheTransactionOrder(withdrawRequest);
+
             log.info("Start submitting a transfer request.");
-            TransactionReceipt transactionReceipt = myToken.transfer(withdrawRequest.getAddress(),withdrawRequest.getAmount().toBigInteger()).sendAsync().get();
-            log.info("Transfer successful. >>> txHash Json:{}", JSON.toJSONString(transactionReceipt));
-            return ResultBean.success(new WithdrawResponse(withdrawRequest.getAddress(),withdrawRequest.getAmount()));
+            CompletableFuture<TransactionReceipt> future = myToken.transfer(withdrawRequest.getAddress(),withdrawRequest.getAmount().toBigInteger()).sendAsync();
+            log.info("Transaction request submitted. Start listening thread.");
+
+            new Thread(() -> {
+                try {
+                    TransactionReceipt receipt = future.get();
+                    log.info("The transaction has been confirmed. >>>> :[{}]",JSON.toJSONString(receipt));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                }
+            }).start();
+
+            log.info("Transfer successful. >>> Waiting for blockchain confirmation transaction.");
+            return ResultBean.success(new WithdrawResponse(withdrawRequest.getAddress()));
         }catch (InvalidException ex){
             log.error(ex.getMessage());
             return ResultBean.exception(ex.getMessage());
@@ -80,6 +102,10 @@ public class WalletServiceImpl implements WalletService {
             log.error("Wallet service internal throw error. exMsg:[{}]",e.getMessage());
             return ResultBean.exception(e.getMessage());
         }
+    }
+
+    private void cacheTransactionOrder(WithdrawRequest withdrawRequest) {
+        redisUtil.set(JedisKey.buildWalletOrderKey(withdrawRequest.getAddress()),withdrawRequest);
     }
 
     @Override

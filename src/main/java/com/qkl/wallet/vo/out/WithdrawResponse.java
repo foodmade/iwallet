@@ -36,4 +36,8 @@ public class WithdrawResponse {
         this.address = address;
         this.totalAmount = totalAmount;
     }
+
+    public WithdrawResponse(String address){
+        this.address = address;
+    }
 }
