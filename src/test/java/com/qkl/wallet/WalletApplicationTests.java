@@ -1,8 +1,11 @@
 package com.qkl.wallet;
 
+import com.alibaba.fastjson.JSON;
 import com.qkl.wallet.config.ApplicationConfig;
 import com.qkl.wallet.contract.MyToken;
+import com.qkl.wallet.service.WalletService;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.web3j.crypto.*;
 import org.web3j.protocol.Web3j;
@@ -104,10 +107,8 @@ class WalletApplicationTests {
         //被转人账户地址
         String toAddress = "0x6e27727bbb9f0140024a62822f013385f4194999";
 
-
-
         //转账人私钥
-        Credentials credentials = Credentials.create("A41686728F41287B31DCC360D251BFC38C1B2BCB95EDC735D4D96A87D2FF4A55");
+        Credentials credentials = Credentials.create(ApplicationConfig.secretKey);
 
 //        MyToken myToken = MyToken.deploy(web3j,credentials,new DefaultGasProvider(),BigInteger.valueOf(100),BigInteger.valueOf(100000),"BBT",BigInteger.valueOf(10),"T").send();
         MyToken myToken = MyToken.load(ApplicationConfig.contractAddress,web3j,credentials, Contract.GAS_PRICE,Contract.GAS_LIMIT);
@@ -115,6 +116,14 @@ class WalletApplicationTests {
 
 
         System.out.println("主账户余额：" + toDecimal(2,myToken.getMasterBalance().send()));
+    }
+
+    @Autowired
+    private WalletService walletService;
+
+    @Test
+    public void testCreateWallet1(){
+        JSON.toJSONString(walletService.createWallet());
     }
 
     public static String toDecimal(int decimal,BigInteger integer){

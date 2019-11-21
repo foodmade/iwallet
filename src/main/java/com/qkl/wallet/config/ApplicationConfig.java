@@ -28,6 +28,15 @@ public class ApplicationConfig {
      */
     public static String secretKey;
 
+    /**
+     * keystore保存路径
+     */
+    public static String wallPath;
+    /**
+     * 钱包默认密码
+     */
+    public static String defaultPassword;
+
     @Value("${wallet.contract.address}")
     public void setContractAddress(String address){
         ApplicationConfig.contractAddress = address;
@@ -41,6 +50,16 @@ public class ApplicationConfig {
     @Value("${wallet.account.secretKey}")
     public void setSecret(String secretKey){
         ApplicationConfig.secretKey = secretKey;
+    }
+
+    @Value("${wallet.keystore.path}")
+    public void setWallPath(String path){
+        ApplicationConfig.wallPath = path;
+    }
+
+    @Value("${wallet.password}")
+    public void setDefaultPassword(String password){
+        ApplicationConfig.defaultPassword = password;
     }
 
 }

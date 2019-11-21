@@ -2,14 +2,14 @@ package com.qkl.wallet.common.enumeration;
 
 public enum ExceptionEnum {
 
-    SUCCESS("10000", "成功"),
-    SERVERERROR("10001", "服务器异常，请联系管理员"),
-    SERVICEERROR("10005", "远程服务异常");
+    SUCCESS(10000, "成功"),
+    SERVERERROR(10001, "服务器异常，请联系管理员"),
+    SERVICEERROR(10005, "远程服务异常");
 
-    private String code;
+    private Integer code;
     private String message;
 
-    ExceptionEnum(String code, String message) {
+    ExceptionEnum(Integer code, String message) {
         this.code = code;
         this.message = message;
     }
@@ -18,7 +18,7 @@ public enum ExceptionEnum {
      * 号码
      * @return
      */
-    public String getCode() {
+    public Integer getCode() {
         return code;
     }
 

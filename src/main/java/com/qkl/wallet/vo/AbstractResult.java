@@ -5,17 +5,17 @@ import com.qkl.wallet.common.enumeration.ExceptionEnum;
 
 public abstract class AbstractResult {
 
-    protected String code = ExceptionEnum.SUCCESS.getCode();
+    protected Integer code = ExceptionEnum.SUCCESS.getCode();
 
     protected String error;
 
     protected boolean success = true;
 
-    public String getCode() {
+    public Integer getCode() {
         return code;
     }
 
-    public void setCode(String code) {
+    public void setCode(Integer code) {
         this.code = code;
     }
 
