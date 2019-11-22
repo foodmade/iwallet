@@ -6,20 +6,22 @@ import com.qkl.wallet.vo.out.BalanceResponse;
 import com.qkl.wallet.vo.out.CreateWalletResponse;
 import com.qkl.wallet.vo.out.WithdrawResponse;
 
+import java.util.List;
+
 public interface WalletService {
 
     /**
      * 创建一个新钱包
      * @return {@link com.qkl.wallet.vo.out.CreateWalletResponse}
      */
-    ResultBean<CreateWalletResponse> createWallet();
+    CreateWalletResponse createWallet();
 
     /**
      * 转账
      * @param withdrawRequest 转账参数
      * @return {@link com.qkl.wallet.vo.out.WithdrawResponse}
      */
-    ResultBean<WithdrawResponse> withdraw(WithdrawRequest withdrawRequest);
+    WithdrawResponse withdraw(List<WithdrawRequest> withdrawRequest);
 
     /**
      * 获取代币余额
