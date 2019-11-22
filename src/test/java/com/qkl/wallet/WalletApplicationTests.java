@@ -3,6 +3,7 @@ package com.qkl.wallet;
 import com.alibaba.fastjson.JSON;
 import com.qkl.wallet.config.ApplicationConfig;
 import com.qkl.wallet.contract.MyToken;
+import com.qkl.wallet.contract.Token;
 import com.qkl.wallet.service.WalletService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -100,22 +101,26 @@ class WalletApplicationTests {
     @Test
     public void testContract() throws Exception {
         //调用的是kovan测试环境，这里使用的是infura这个客户端
-        Web3j web3j = Web3j.build(new HttpService(ApplicationConfig.blockHost));
+//        Web3j web3j = Web3j.build(new HttpService(ApplicationConfig.blockHost));
+        Web3j web3j = Web3j.build(new HttpService("https://kovan.infura.io/v3/ef40dd3c018349959f1509fb679ea67d"));
 
         //转账人账户地址
         String ownAddress = "0x493fb23d930458a84b49b5ca53d961e039868a58";
         //被转人账户地址
         String toAddress = "0x6e27727bbb9f0140024a62822f013385f4194999";
 
-        //转账人私钥
-        Credentials credentials = Credentials.create(ApplicationConfig.secretKey);
+        //4A8B70A5DC05C82972AC79D9733010E6FE1D394D7C634ED703D2A7F7072D45CE  account3
 
-//        MyToken myToken = MyToken.deploy(web3j,credentials,new DefaultGasProvider(),BigInteger.valueOf(100),BigInteger.valueOf(100000),"BBT",BigInteger.valueOf(10),"T").send();
-        MyToken myToken = MyToken.load(ApplicationConfig.contractAddress,web3j,credentials, Contract.GAS_PRICE,Contract.GAS_LIMIT);
+        //转账人私钥
+//        Credentials credentials = Credentials.create(ApplicationConfig.secretKey);
+        Credentials credentials = Credentials.create("A41686728F41287B31DCC360D251BFC38C1B2BCB95EDC735D4D96A87D2FF4A55");
+
+//        MyToken myToken = MyToken.deploy(web3j,credentials,new DefaultGasProvider(),BigInteger.valueOf(100),BigInteger.valueOf(9000000000000000000L),"CNM",BigInteger.valueOf(18),"CNM").send();
+        Token myToken = Token.load("0x009b3D84760caa9ee6792c58184476166F4D1221",web3j,credentials, Contract.GAS_PRICE,Contract.GAS_LIMIT);
         System.out.println("合约部署完毕 状态:" + myToken.isValid() + " 地址：" + myToken.getContractAddress());
 
-
-        System.out.println("主账户余额：" + toDecimal(2,myToken.getMasterBalance().send()));
+        TransactionReceipt receipt = myToken.transfer(toAddress,BigInteger.valueOf(100L).multiply(BigInteger.valueOf(1000000000000000000L))).sendAsync().get();
+        System.out.println("完毕："+JSON.toJSONString(receipt));
     }
 
     @Autowired

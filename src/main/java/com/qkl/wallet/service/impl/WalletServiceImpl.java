@@ -1,14 +1,16 @@
 package com.qkl.wallet.service.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.qkl.wallet.common.JedisKey;
 import com.qkl.wallet.common.RedisUtil;
+import com.qkl.wallet.common.SpringContext;
+import com.qkl.wallet.common.enumeration.Status;
 import com.qkl.wallet.common.exception.InvalidException;
 import com.qkl.wallet.common.walletUtil.LightWallet;
 import com.qkl.wallet.common.walletUtil.outModel.WalletAddressInfo;
 import com.qkl.wallet.config.ApplicationConfig;
 import com.qkl.wallet.contract.MyToken;
+import com.qkl.wallet.core.event.WithdrawEvent;
 import com.qkl.wallet.service.WalletService;
 import com.qkl.wallet.vo.ResultBean;
 import com.qkl.wallet.vo.in.WithdrawRequest;
@@ -22,13 +24,12 @@ import org.springframework.util.Assert;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.web3j.tx.Contract;
-import org.web3j.tx.Transfer;
-import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -48,60 +49,99 @@ public class WalletServiceImpl implements WalletService {
     private RedisUtil redisUtil;
 
     @Override
-    public ResultBean<CreateWalletResponse> createWallet() {
+    public CreateWalletResponse createWallet() {
         try {
             WalletAddressInfo walletAddressInfo = LightWallet.createNewWallet(ApplicationConfig.defaultPassword);
             Credentials credentials = LightWallet.openWallet(ApplicationConfig.defaultPassword, walletAddressInfo.getName());
             String privateKey = Numeric.toHexStringNoPrefix(credentials.getEcKeyPair().getPrivateKey());
-            return ResultBean.success(new CreateWalletResponse(credentials.getAddress(),walletAddressInfo.getName(),privateKey));
+            return new CreateWalletResponse(credentials.getAddress(),walletAddressInfo.getName(),privateKey);
         } catch (Exception e) {
             log.error("Create wallet throw error . throw info >>> [{}]",e.getMessage());
-            return ResultBean.exception(e.getMessage());
+            return null;
         }
     }
 
     @Override
-    public ResultBean<WithdrawResponse> withdraw(WithdrawRequest withdrawRequest) {
+    public WithdrawResponse withdraw(List<WithdrawRequest> withdrawRequests) {
         try {
 
-            Assert.notNull(withdrawRequest.getAddress(),"Transfer to address must not be null.");
-            Assert.notNull(withdrawRequest.getAmount(),"Transfer amount must not be null.");
-            Assert.isTrue(withdrawRequest.getAmount().compareTo(BigDecimal.ZERO) <= 0,"Negative or zero amount are not allowed");
+            //Invalid withdraw order list.
+            withdrawRequests = validOrderRequest(withdrawRequests);
+
+
             //Load contract client.
             MyToken myToken = LightWallet.loadTokenClient(web3j);
+            //0x493fb23d930458a84b49B5cA53D961e039868A58
             log.info("Contract valid:[{}] address:[{}]",myToken.isValid(),myToken.getContractAddress());
 
             if(!myToken.isValid()){
                 throw new InvalidException("Contract address invalid. Please contact the administrator to redeploy");
             }
 
-            //Cache this order basis info.
-            cacheTransactionOrder(withdrawRequest);
+            for (WithdrawRequest withdrawRequest : withdrawRequests) {
+                //Cache this order basis info.
+                cacheTransactionOrder(withdrawRequest);
 
-            log.info("Start submitting a transfer request.");
-            CompletableFuture<TransactionReceipt> future = myToken.transfer(withdrawRequest.getAddress(),withdrawRequest.getAmount().toBigInteger()).sendAsync();
-            log.info("Transaction request submitted. Start listening thread.");
+                log.info("Start submitting a transfer request.");
+                CompletableFuture<TransactionReceipt> future = myToken.transfer(withdrawRequest.getAddress(),withdrawRequest.getAmount().toBigInteger()).sendAsync();
+                log.info("Transaction request submitted. Start listening thread.");
 
-            new Thread(() -> {
-                try {
-                    TransactionReceipt receipt = future.get();
-                    log.info("The transaction has been confirmed. >>>> :[{}]",JSON.toJSONString(receipt));
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (ExecutionException e) {
-                    e.printStackTrace();
-                }
-            }).start();
+                new Thread(() -> {
+                    try {
+                        TransactionReceipt receipt = future.get();
+                        log.info("The transaction has been confirmed. >>>> :[{}]",JSON.toJSONString(receipt));
+                        addSuccessEvent(withdrawRequest);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    } catch (ExecutionException e) {
+                        e.printStackTrace();
+                    }
+                }).start();
 
-            log.info("Transfer successful. >>> Waiting for blockchain confirmation transaction.");
-            return ResultBean.success(new WithdrawResponse(withdrawRequest.getAddress()));
+                log.info("Transfer successful. >>> Waiting for blockchain confirmation transaction.");
+            }
+
+
+            return new WithdrawResponse("");
         }catch (InvalidException ex){
             log.error(ex.getMessage());
-            return ResultBean.exception(ex.getMessage());
+            return null;
         } catch (Exception e){
             log.error("Wallet service internal throw error. exMsg:[{}]",e.getMessage());
-            return ResultBean.exception(e.getMessage());
+            return null;
         }
+    }
+
+    private List<WithdrawRequest> validOrderRequest(List<WithdrawRequest> withdrawRequests) {
+
+        List<WithdrawRequest> validList = new ArrayList<>();
+
+        for (WithdrawRequest withdrawRequest : withdrawRequests) {
+            try {
+                Assert.notNull(withdrawRequest.getAddress(),"Transfer to address must not be null.");
+                Assert.notNull(withdrawRequest.getAmount(),"Transfer amount must not be null.");
+                Assert.isTrue(withdrawRequest.getAmount().compareTo(BigDecimal.ZERO) <= 0,"Negative or zero amount are not allowed");
+                validList.add(withdrawRequest);
+            } catch (Exception e) {
+                log.error(e.getMessage());
+                log.error("Throw withdraw order info:[{}]",JSON.toJSONString(withdrawRequest));
+                addErrEvent(withdrawRequest,e.getMessage());
+            }
+        }
+        return validList;
+
+    }
+
+    private void addSuccessEvent(WithdrawRequest withdrawRequest){
+        addEventQueue(withdrawRequest,Status.SUCCESS,"");
+    }
+
+    private void addErrEvent(WithdrawRequest withdrawRequest,String message){
+        addEventQueue(withdrawRequest,Status.FAIL,message);
+    }
+
+    private void addEventQueue(WithdrawRequest withdrawRequest, Status status, String message) {
+        SpringContext.getApplicationContext().publishEvent(new WithdrawEvent(this,withdrawRequest,status.getType(),message));
     }
 
     private void cacheTransactionOrder(WithdrawRequest withdrawRequest) {

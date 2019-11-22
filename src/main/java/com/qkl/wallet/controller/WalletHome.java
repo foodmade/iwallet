@@ -6,6 +6,7 @@ import com.qkl.wallet.config.ApplicationConfig;
 import com.qkl.wallet.contract.MyToken;
 import com.qkl.wallet.service.WalletService;
 import com.qkl.wallet.vo.ResultBean;
+import com.qkl.wallet.vo.in.WithdrawParams;
 import com.qkl.wallet.vo.in.WithdrawRequest;
 import com.qkl.wallet.vo.out.BalanceResponse;
 import com.qkl.wallet.vo.out.CreateWalletResponse;
@@ -20,6 +21,7 @@ import org.web3j.tx.Contract;
 
 import java.math.BigInteger;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import static com.qkl.wallet.common.UtilsService.toDecimal;
 
@@ -43,7 +45,7 @@ public class WalletHome {
      * 创建钱包
      */
     @PostMapping(value = "getWallet")
-    public ResultBean<CreateWalletResponse> createWallet(){
+    public CreateWalletResponse createWallet(){
         return walletService.createWallet();
     }
 
@@ -51,8 +53,8 @@ public class WalletHome {
      * 提币
      */
     @PostMapping(value = "withdraw")
-    public ResultBean<WithdrawResponse> withdraw(@RequestBody WithdrawRequest withdrawRequest){
-        return walletService.withdraw(withdrawRequest);
+    public WithdrawResponse withdraw(@RequestBody WithdrawParams params){
+        return walletService.withdraw(params.getRequest());
     }
 
     /**
@@ -68,30 +70,28 @@ public class WalletHome {
     @GetMapping(value = "test")
     public HashMap test() throws Exception{
 
-        String account = "0x810f2EFe6E06820E1ee9357A2a61Df1a09466482";
+//        String account = "0x810f2EFe6E06820E1ee9357A2a61Df1a09466482";
+        String form = "0x493fb23d930458a84b49b5ca53d961e039868a58";
+        String to = "0x50E13802e0c9f84AF4c48CAc39acaF83be28397A";
 
-        Credentials credentials = Credentials.create(ApplicationConfig.secretKey);
-        MyToken myToken = MyToken.load(ApplicationConfig.contractAddress,web3j,credentials, Contract.GAS_PRICE,Contract.GAS_LIMIT);
+
+        Credentials credentials = Credentials.create("EA9047A5DFD2197545D683E4E8DE61ECC02F08D215DA7CA7F6433C06FAB140FA");
+//        MyToken myToken = MyToken.load(ApplicationConfig.contractAddress,web3j,credentials, Contract.GAS_PRICE,Contract.GAS_LIMIT);
+        MyToken myToken = MyToken.load("0x9ace0861dd9fe9d87007aca6b3059dffba4dd0d2",web3j,credentials, Contract.GAS_PRICE,Contract.GAS_LIMIT);
         System.out.println("合约部署完毕 状态:" + myToken.isValid() + " 地址：" + myToken.getContractAddress());
 
-        CompletableFuture<TransactionReceipt> future = myToken.transfer(account,BigInteger.valueOf(1000)).sendAsync();
+        Boolean future = myToken.transferFrom(form,to,BigInteger.valueOf(1000)).sendAsync().get();
 
-        new Thread(() -> {
-            try {
-                TransactionReceipt receipt = future.get();
-                System.out.println("转账完成 JSON:" + JSON.toJSONString(receipt));
+//        new Thread(() -> {
+//            try {
+//                Boolean receipt = future.get();
+//                System.out.println("转账完成 JSON:" + JSON.toJSONString(receipt));
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }).start();
 
-                System.out.println("主账户余额：" + toDecimal(2,myToken.getMasterBalance().send()));
-                System.out.println("次账户余额：" + toDecimal(2,myToken.getBalance(account).send()));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }).start();
-
-
-
-        System.out.println("主账户余额：" + toDecimal(2,myToken.getMasterBalance().send()));
-        System.out.println("次账户余额：" + toDecimal(2,myToken.getBalance(account).send()));
+        System.out.println("boolean:"+future);
 
         return new HashMap();
     }
