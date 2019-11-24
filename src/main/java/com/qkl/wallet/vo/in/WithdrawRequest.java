@@ -2,6 +2,7 @@ package com.qkl.wallet.vo.in;
 
 import lombok.Data;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 /**
@@ -11,7 +12,7 @@ import java.math.BigDecimal;
  * @Description <>
  **/
 @Data
-public class WithdrawRequest {
+public class WithdrawRequest implements Serializable {
 
     /**
      * 转账地址

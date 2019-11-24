@@ -33,7 +33,7 @@ public class ListenerTransferEvent extends Thread {
         Credentials.create(ApplicationConfig.secretKey);
 
         Event event = new Event("transfer",
-                Arrays.asList(new TypeReference<Address>() {}, new TypeReference<Address>() {}, new TypeReference<Uint256>() {}));
+                Arrays.asList(new TypeReference<Address>() {}, new TypeReference<Uint256>() {}));
 
         EthFilter filter = new EthFilter(DefaultBlockParameterName.EARLIEST,
                 DefaultBlockParameterName.LATEST, ApplicationConfig.contractAddress);

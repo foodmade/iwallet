@@ -37,6 +37,20 @@ public class ApplicationConfig {
      */
     public static String defaultPassword;
 
+    /**
+     * 连接超时时间
+     */
+    public static Integer connectionTimeout;
+
+    /**
+     * 信息读取超时时间
+     */
+    public static Integer readTimeout;
+    /**
+     * 回调地址
+     */
+    public static String callBackHost;
+
     @Value("${wallet.contract.address}")
     public void setContractAddress(String address){
         ApplicationConfig.contractAddress = address;
@@ -62,4 +76,18 @@ public class ApplicationConfig {
         ApplicationConfig.defaultPassword = password;
     }
 
+    @Value("${http.connection.timeout}")
+    public void setConnectionTimeout(Integer connectionTimeout) {
+        ApplicationConfig.connectionTimeout = connectionTimeout;
+    }
+
+    @Value("${http.read.timeout}")
+    public void setReadTimeout(Integer readTimeout) {
+        ApplicationConfig.readTimeout = readTimeout;
+    }
+
+    @Value("${host.callback}")
+    public void setCallBackHost(String callBackHost) {
+        ApplicationConfig.callBackHost = callBackHost;
+    }
 }

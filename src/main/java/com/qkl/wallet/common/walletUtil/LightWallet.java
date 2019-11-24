@@ -3,6 +3,7 @@ package com.qkl.wallet.common.walletUtil;
 import com.qkl.wallet.common.walletUtil.outModel.WalletAddressInfo;
 import com.qkl.wallet.config.ApplicationConfig;
 import com.qkl.wallet.contract.MyToken;
+import com.qkl.wallet.contract.Token;
 import lombok.extern.slf4j.Slf4j;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.WalletUtils;
@@ -66,10 +67,10 @@ public class LightWallet {
     /**
      * 打开合约客户端
      */
-    public static MyToken loadTokenClient(Web3j web3j){
+    public static Token loadTokenClient(Web3j web3j){
         Credentials credentials = Credentials.create(ApplicationConfig.secretKey);
         //Load contract client.
-        return MyToken.load(ApplicationConfig.contractAddress,web3j,credentials, Contract.GAS_PRICE,Contract.GAS_LIMIT);
+        return Token.load(ApplicationConfig.contractAddress,web3j,credentials, Contract.GAS_PRICE,Contract.GAS_LIMIT);
     }
 
 }

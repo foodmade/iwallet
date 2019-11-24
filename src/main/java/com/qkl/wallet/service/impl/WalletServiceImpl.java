@@ -1,21 +1,27 @@
 package com.qkl.wallet.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.qkl.wallet.common.Const;
 import com.qkl.wallet.common.JedisKey;
 import com.qkl.wallet.common.RedisUtil;
 import com.qkl.wallet.common.SpringContext;
+import com.qkl.wallet.common.enumeration.CallbackTypeEnum;
+import com.qkl.wallet.common.enumeration.ExceptionEnum;
 import com.qkl.wallet.common.enumeration.Status;
 import com.qkl.wallet.common.exception.InvalidException;
 import com.qkl.wallet.common.walletUtil.LightWallet;
 import com.qkl.wallet.common.walletUtil.outModel.WalletAddressInfo;
 import com.qkl.wallet.config.ApplicationConfig;
 import com.qkl.wallet.contract.MyToken;
+import com.qkl.wallet.contract.Token;
 import com.qkl.wallet.core.event.WithdrawEvent;
+import com.qkl.wallet.service.TransactionManageService;
 import com.qkl.wallet.service.WalletService;
 import com.qkl.wallet.vo.ResultBean;
 import com.qkl.wallet.vo.in.WithdrawRequest;
 import com.qkl.wallet.vo.out.BalanceResponse;
 import com.qkl.wallet.vo.out.CreateWalletResponse;
+import com.qkl.wallet.vo.out.WithdrawCallback;
 import com.qkl.wallet.vo.out.WithdrawResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +52,7 @@ public class WalletServiceImpl implements WalletService {
     @Autowired
     private Web3j web3j;
     @Autowired
-    private RedisUtil redisUtil;
+    private TransactionManageService transactionManageService;
 
     @Override
     public CreateWalletResponse createWallet() {
@@ -68,10 +74,12 @@ public class WalletServiceImpl implements WalletService {
             //Invalid withdraw order list.
             withdrawRequests = validOrderRequest(withdrawRequests);
 
-
+            if(withdrawRequests.isEmpty()){
+                return new WithdrawResponse("");
+            }
             //Load contract client.
-            MyToken myToken = LightWallet.loadTokenClient(web3j);
-            //0x493fb23d930458a84b49B5cA53D961e039868A58
+            Token myToken = LightWallet.loadTokenClient(web3j);
+
             log.info("Contract valid:[{}] address:[{}]",myToken.isValid(),myToken.getContractAddress());
 
             if(!myToken.isValid()){
@@ -80,17 +88,19 @@ public class WalletServiceImpl implements WalletService {
 
             for (WithdrawRequest withdrawRequest : withdrawRequests) {
                 //Cache this order basis info.
-                cacheTransactionOrder(withdrawRequest);
+                transactionManageService.cacheTransactionOrder(withdrawRequest);
 
                 log.info("Start submitting a transfer request.");
-                CompletableFuture<TransactionReceipt> future = myToken.transfer(withdrawRequest.getAddress(),withdrawRequest.getAmount().toBigInteger()).sendAsync();
+                CompletableFuture<TransactionReceipt> future = myToken
+                        .transfer(withdrawRequest.getAddress(),withdrawRequest.getAmount().toBigInteger().multiply(Const._UNIT))
+                        .sendAsync();
                 log.info("Transaction request submitted. Start listening thread.");
 
                 new Thread(() -> {
                     try {
                         TransactionReceipt receipt = future.get();
                         log.info("The transaction has been confirmed. >>>> :[{}]",JSON.toJSONString(receipt));
-                        addSuccessEvent(withdrawRequest);
+                        addSuccessEvent(assemblyTransactionCallModel(receipt,withdrawRequest));
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     } catch (ExecutionException e) {
@@ -100,8 +110,6 @@ public class WalletServiceImpl implements WalletService {
 
                 log.info("Transfer successful. >>> Waiting for blockchain confirmation transaction.");
             }
-
-
             return new WithdrawResponse("");
         }catch (InvalidException ex){
             log.error(ex.getMessage());
@@ -112,6 +120,17 @@ public class WalletServiceImpl implements WalletService {
         }
     }
 
+    private WithdrawCallback assemblyTransactionCallModel(TransactionReceipt receipt,WithdrawRequest request) {
+        WithdrawCallback callback = new WithdrawCallback(CallbackTypeEnum.WITHDRAW_TYPE);
+        callback.setAmount(request.getAmount()+"");
+        callback.setGas(receipt.getGasUsed()+"");
+        callback.setRecepient(receipt.getTo());
+        callback.setSender(receipt.getFrom());
+        callback.setTxnHash(receipt.getTransactionHash());
+        callback.setTrace(request.getTrace());
+        return callback;
+    }
+
     private List<WithdrawRequest> validOrderRequest(List<WithdrawRequest> withdrawRequests) {
 
         List<WithdrawRequest> validList = new ArrayList<>();
@@ -120,7 +139,7 @@ public class WalletServiceImpl implements WalletService {
             try {
                 Assert.notNull(withdrawRequest.getAddress(),"Transfer to address must not be null.");
                 Assert.notNull(withdrawRequest.getAmount(),"Transfer amount must not be null.");
-                Assert.isTrue(withdrawRequest.getAmount().compareTo(BigDecimal.ZERO) <= 0,"Negative or zero amount are not allowed");
+                Assert.isTrue(withdrawRequest.getAmount().compareTo(BigDecimal.ZERO) > 0,"Negative or zero amount are not allowed");
                 validList.add(withdrawRequest);
             } catch (Exception e) {
                 log.error(e.getMessage());
@@ -132,20 +151,16 @@ public class WalletServiceImpl implements WalletService {
 
     }
 
-    private void addSuccessEvent(WithdrawRequest withdrawRequest){
-        addEventQueue(withdrawRequest,Status.SUCCESS,"");
+    private void addSuccessEvent(WithdrawCallback response){
+        addEventQueue(response,Status.SUCCESS,"");
     }
 
     private void addErrEvent(WithdrawRequest withdrawRequest,String message){
-        addEventQueue(withdrawRequest,Status.FAIL,message);
+        addEventQueue(new WithdrawCallback(withdrawRequest.getAddress(), CallbackTypeEnum.WITHDRAW_TYPE),Status.FAIL,message);
     }
 
-    private void addEventQueue(WithdrawRequest withdrawRequest, Status status, String message) {
-        SpringContext.getApplicationContext().publishEvent(new WithdrawEvent(this,withdrawRequest,status.getType(),message));
-    }
-
-    private void cacheTransactionOrder(WithdrawRequest withdrawRequest) {
-        redisUtil.set(JedisKey.buildWalletOrderKey(withdrawRequest.getAddress()),withdrawRequest);
+    private void addEventQueue(WithdrawCallback response, Status status, String message) {
+        SpringContext.getApplicationContext().publishEvent(new WithdrawEvent(this,response,status.getType(),message));
     }
 
     @Override
@@ -161,7 +176,12 @@ public class WalletServiceImpl implements WalletService {
     }
 
     private BigInteger getBalanceOfAddress(String address) throws ExecutionException, InterruptedException {
-        MyToken myToken = LightWallet.loadTokenClient(web3j);
-        return myToken.getBalance(address).sendAsync().get();
+        Token myToken = LightWallet.loadTokenClient(web3j);
+        return myToken.balanceOf(address).sendAsync().get();
     }
+
+    public static void main(String[] args) {
+        System.out.println(System.getProperty("user.dir"));
+    }
+
 }

@@ -7,7 +7,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 import org.web3j.protocol.Web3j;
 
-@Component
+//@Component
 @Slf4j
 public class AfterServiceStarted implements ApplicationRunner {
 
@@ -17,6 +17,6 @@ public class AfterServiceStarted implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
         //Start transfer event monitor work thread.
-//        new ListenerTransferEvent(web3j).start();
+        new ListenerTransferEvent(web3j).start();
     }
 }
