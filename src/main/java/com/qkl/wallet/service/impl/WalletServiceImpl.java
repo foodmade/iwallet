@@ -12,7 +12,6 @@ import com.qkl.wallet.common.exception.InvalidException;
 import com.qkl.wallet.common.walletUtil.LightWallet;
 import com.qkl.wallet.common.walletUtil.outModel.WalletAddressInfo;
 import com.qkl.wallet.config.ApplicationConfig;
-import com.qkl.wallet.contract.MyToken;
 import com.qkl.wallet.contract.Token;
 import com.qkl.wallet.core.event.WithdrawEvent;
 import com.qkl.wallet.service.TransactionManageService;
@@ -116,6 +115,7 @@ public class WalletServiceImpl implements WalletService {
             return null;
         } catch (Exception e){
             log.error("Wallet service internal throw error. exMsg:[{}]",e.getMessage());
+            e.printStackTrace();
             return null;
         }
     }

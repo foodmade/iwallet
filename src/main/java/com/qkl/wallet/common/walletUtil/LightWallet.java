@@ -2,7 +2,6 @@ package com.qkl.wallet.common.walletUtil;
 
 import com.qkl.wallet.common.walletUtil.outModel.WalletAddressInfo;
 import com.qkl.wallet.config.ApplicationConfig;
-import com.qkl.wallet.contract.MyToken;
 import com.qkl.wallet.contract.Token;
 import lombok.extern.slf4j.Slf4j;
 import org.web3j.crypto.Credentials;

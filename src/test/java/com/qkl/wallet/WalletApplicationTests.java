@@ -3,16 +3,12 @@ package com.qkl.wallet;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.qkl.wallet.common.HttpUtils;
-import com.qkl.wallet.config.ApplicationConfig;
-import com.qkl.wallet.contract.MyToken;
 import com.qkl.wallet.contract.Token;
 import com.qkl.wallet.service.WalletService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.web3j.crypto.*;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
@@ -117,20 +113,20 @@ class WalletApplicationTests {
         //被转人账户地址
         String toAddress = "0x6e27727bbb9f0140024a62822f013385f4194999";
 
-        String contractAddressLoalhost = "0xcc561e689ece612751ac7dfcf252f66518b1c274";
+//        String contractAddressLoalhost = "0xcc561e689ece612751ac7dfcf252f66518b1c274";
 
         //4A8B70A5DC05C82972AC79D9733010E6FE1D394D7C634ED703D2A7F7072D45CE  account3
 
         //转账人私钥
 //        Credentials credentials = Credentials.create(ApplicationConfig.secretKey);
 //        Credentials credentials = Credentials.create("A41686728F41287B31DCC360D251BFC38C1B2BCB95EDC735D4D96A87D2FF4A55");
-        Credentials credentials = Credentials.create("ED8C110972FBFF97574A53D5029893514BD9333E97F369A749CD46033275C6D7");
+        Credentials credentials = Credentials.create("7535D41547A5FEAAF97BDDCD900A3871C42D5932C469D1403F05B143DE0DC7DC");
 
 //        MyToken myToken = MyToken.deploy(web3j,credentials,new DefaultGasProvider(),BigInteger.valueOf(10000000),BigInteger.valueOf(1000000000000000000L),"CNM",BigInteger.valueOf(18),"CNM").send();
-//        Token myToken = Token.deploy(web3j,credentials,new DefaultGasProvider(),BigInteger.valueOf(10000000).multiply(BigInteger.valueOf(1000000000000000000L)),"CNM","CNM").send();
+        Token myToken = Token.deploy(web3j,credentials,new DefaultGasProvider(),BigInteger.valueOf(10000000).multiply(BigInteger.valueOf(1000000000000000000L)),"CNN","CNN").send();
 
 //        Token myToken = Token.load("0x009b3D84760caa9ee6792c58184476166F4D1221",web3j,credentials, Contract.GAS_PRICE,Contract.GAS_LIMIT);
-        Token myToken = Token.load(contractAddressLoalhost,web3j,credentials, Contract.GAS_PRICE,Contract.GAS_LIMIT);
+//        Token myToken = Token.load(contractAddressLoalhost,web3j,credentials, Contract.GAS_PRICE,Contract.GAS_LIMIT);
         System.out.println("合约部署完毕 状态:" + myToken.isValid() + " 地址：" + myToken.getContractAddress());
 
         TransactionReceipt receipt = myToken.transfer(toAddress,BigInteger.valueOf(2000L).multiply(BigInteger.valueOf(1000000000000000000L))).sendAsync().get();

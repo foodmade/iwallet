@@ -1,9 +1,6 @@
 package com.qkl.wallet.controller;
 
-import com.alibaba.fastjson.JSON;
-import com.qkl.wallet.common.RedisUtil;
-import com.qkl.wallet.config.ApplicationConfig;
-import com.qkl.wallet.contract.MyToken;
+import com.qkl.wallet.contract.Token;
 import com.qkl.wallet.service.WalletService;
 import com.qkl.wallet.vo.ResultBean;
 import com.qkl.wallet.vo.in.WithdrawParams;
@@ -17,8 +14,11 @@ import org.springframework.web.bind.annotation.*;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.http.HttpService;
 import org.web3j.tx.Contract;
+import org.web3j.tx.gas.DefaultGasProvider;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
@@ -67,6 +67,19 @@ public class WalletHome {
         return walletService.getBalance(address);
     }
 
+    /**
+     * 部署合约代码
+     * @return
+     */
+    @GetMapping(value = "deployContract")
+    public ResultBean deployContract(@RequestParam String address,@RequestParam String type) throws Exception {
+        Web3j web3j = Web3j.build(new HttpService());
+        Credentials credentials = Credentials.create(address);
+        Token myToken = Token.deploy(web3j,credentials,new DefaultGasProvider(),BigInteger.valueOf(10000000).multiply(BigInteger.valueOf(1000000000000000000L)),type,type).send();
+        System.out.println("合约部署完毕 状态:" + myToken.isValid() + " 地址：" + myToken.getContractAddress());
+        return ResultBean.success(null);
+    }
+
     @GetMapping(value = "test")
     public HashMap test() throws Exception{
 
@@ -77,10 +90,10 @@ public class WalletHome {
 
         Credentials credentials = Credentials.create("EA9047A5DFD2197545D683E4E8DE61ECC02F08D215DA7CA7F6433C06FAB140FA");
 //        MyToken myToken = MyToken.load(ApplicationConfig.contractAddress,web3j,credentials, Contract.GAS_PRICE,Contract.GAS_LIMIT);
-        MyToken myToken = MyToken.load("0x9ace0861dd9fe9d87007aca6b3059dffba4dd0d2",web3j,credentials, Contract.GAS_PRICE,Contract.GAS_LIMIT);
-        System.out.println("合约部署完毕 状态:" + myToken.isValid() + " 地址：" + myToken.getContractAddress());
-
-        Boolean future = myToken.transferFrom(form,to,BigInteger.valueOf(1000)).sendAsync().get();
+//        MyToken myToken = MyToken.load("0x9ace0861dd9fe9d87007aca6b3059dffba4dd0d2",web3j,credentials, Contract.GAS_PRICE,Contract.GAS_LIMIT);
+//        System.out.println("合约部署完毕 状态:" + myToken.isValid() + " 地址：" + myToken.getContractAddress());
+//
+//        Boolean future = myToken.transferFrom(form,to,BigInteger.valueOf(1000)).sendAsync().get();
 
 //        new Thread(() -> {
 //            try {
@@ -91,7 +104,7 @@ public class WalletHome {
 //            }
 //        }).start();
 
-        System.out.println("boolean:"+future);
+//        System.out.println("boolean:"+future);
 
         return new HashMap();
     }

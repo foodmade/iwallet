@@ -7,7 +7,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 import org.web3j.protocol.Web3j;
 
-//@Component
+@Component
 @Slf4j
 public class AfterServiceStarted implements ApplicationRunner {
 

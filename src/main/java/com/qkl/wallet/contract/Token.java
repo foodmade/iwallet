@@ -33,7 +33,7 @@ import org.web3j.tx.gas.ContractGasProvider;
  * <p>Auto generated code.
  * <p><strong>Do not modify!</strong>
  * <p>Please use the <a href="https://docs.web3j.io/command_line.html">web3j command line tools</a>,
- * or the org.web3j.codegen.SolidityFunctionWrapperGenerator in the 
+ * or the org.web3j.codegen.SolidityFunctionWrapperGenerator in the
  * <a href="https://github.com/web3j/web3j/tree/master/codegen">codegen module</a> to update.
  *
  * <p>Generated with web3j version 4.5.5.
@@ -66,11 +66,11 @@ public class Token extends Contract {
 
     public static final String FUNC_ALLOWANCE = "allowance";
 
-    public static final Event TRANSFER_EVENT = new Event("Transfer", 
+    public static final Event TRANSFER_EVENT = new Event("Transfer",
             Arrays.<TypeReference<?>>asList(new TypeReference<Address>(true) {}, new TypeReference<Address>(true) {}, new TypeReference<Uint256>() {}));
     ;
 
-    public static final Event BURN_EVENT = new Event("Burn", 
+    public static final Event BURN_EVENT = new Event("Burn",
             Arrays.<TypeReference<?>>asList(new TypeReference<Address>(true) {}, new TypeReference<Uint256>() {}));
     ;
 
@@ -93,15 +93,15 @@ public class Token extends Contract {
     }
 
     public RemoteFunctionCall<String> name() {
-        final Function function = new Function(FUNC_NAME, 
-                Arrays.<Type>asList(), 
+        final Function function = new Function(FUNC_NAME,
+                Arrays.<Type>asList(),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}));
         return executeRemoteCallSingleValueReturn(function, String.class);
     }
 
     public RemoteFunctionCall<TransactionReceipt> approve(String _spender, BigInteger _value) {
         final Function function = new Function(
-                FUNC_APPROVE, 
+                FUNC_APPROVE,
                 Arrays.<Type>asList(new Address(160, _spender),
                 new Uint256(_value)),
                 Collections.<TypeReference<?>>emptyList());
@@ -109,15 +109,15 @@ public class Token extends Contract {
     }
 
     public RemoteFunctionCall<BigInteger> totalSupply() {
-        final Function function = new Function(FUNC_TOTALSUPPLY, 
-                Arrays.<Type>asList(), 
+        final Function function = new Function(FUNC_TOTALSUPPLY,
+                Arrays.<Type>asList(),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}));
         return executeRemoteCallSingleValueReturn(function, BigInteger.class);
     }
 
     public RemoteFunctionCall<TransactionReceipt> transferFrom(String _from, String _to, BigInteger _value) {
         final Function function = new Function(
-                FUNC_TRANSFERFROM, 
+                FUNC_TRANSFERFROM,
                 Arrays.<Type>asList(new Address(160, _from),
                 new Address(160, _to),
                 new Uint256(_value)),
@@ -126,22 +126,22 @@ public class Token extends Contract {
     }
 
     public RemoteFunctionCall<BigInteger> decimals() {
-        final Function function = new Function(FUNC_DECIMALS, 
-                Arrays.<Type>asList(), 
+        final Function function = new Function(FUNC_DECIMALS,
+                Arrays.<Type>asList(),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Uint8>() {}));
         return executeRemoteCallSingleValueReturn(function, BigInteger.class);
     }
 
     public RemoteFunctionCall<TransactionReceipt> burn(BigInteger _value) {
         final Function function = new Function(
-                FUNC_BURN, 
+                FUNC_BURN,
                 Arrays.<Type>asList(new Uint256(_value)),
                 Collections.<TypeReference<?>>emptyList());
         return executeRemoteCallTransaction(function);
     }
 
     public RemoteFunctionCall<BigInteger> balanceOf(String param0) {
-        final Function function = new Function(FUNC_BALANCEOF, 
+        final Function function = new Function(FUNC_BALANCEOF,
                 Arrays.<Type>asList(new Address(160, param0)),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}));
         return executeRemoteCallSingleValueReturn(function, BigInteger.class);
@@ -149,7 +149,7 @@ public class Token extends Contract {
 
     public RemoteFunctionCall<TransactionReceipt> burnFrom(String _from, BigInteger _value) {
         final Function function = new Function(
-                FUNC_BURNFROM, 
+                FUNC_BURNFROM,
                 Arrays.<Type>asList(new Address(160, _from),
                 new Uint256(_value)),
                 Collections.<TypeReference<?>>emptyList());
@@ -157,15 +157,15 @@ public class Token extends Contract {
     }
 
     public RemoteFunctionCall<String> symbol() {
-        final Function function = new Function(FUNC_SYMBOL, 
-                Arrays.<Type>asList(), 
+        final Function function = new Function(FUNC_SYMBOL,
+                Arrays.<Type>asList(),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}));
         return executeRemoteCallSingleValueReturn(function, String.class);
     }
 
     public RemoteFunctionCall<TransactionReceipt> transfer(String _to, BigInteger _value) {
         final Function function = new Function(
-                FUNC_TRANSFER, 
+                FUNC_TRANSFER,
                 Arrays.<Type>asList(new Address(160, _to),
                 new Uint256(_value)),
                 Collections.<TypeReference<?>>emptyList());
@@ -174,16 +174,16 @@ public class Token extends Contract {
 
     public RemoteFunctionCall<TransactionReceipt> approveAndCall(String _spender, BigInteger _value, byte[] _extraData) {
         final Function function = new Function(
-                FUNC_APPROVEANDCALL, 
+                FUNC_APPROVEANDCALL,
                 Arrays.<Type>asList(new Address(160, _spender),
                 new Uint256(_value),
-                new org.web3j.abi.datatypes.DynamicBytes(_extraData)), 
+                new org.web3j.abi.datatypes.DynamicBytes(_extraData)),
                 Collections.<TypeReference<?>>emptyList());
         return executeRemoteCallTransaction(function);
     }
 
     public RemoteFunctionCall<BigInteger> allowance(String param0, String param1) {
-        final Function function = new Function(FUNC_ALLOWANCE, 
+        final Function function = new Function(FUNC_ALLOWANCE,
                 Arrays.<Type>asList(new Address(160, param0),
                 new Address(160, param1)),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}));
