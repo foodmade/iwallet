@@ -48,7 +48,7 @@ public class WithdrawCallback {
     /**
      * 交易费（如果coinType是 ETH 或 BTC）
      */
-    private String gas;
+    private String gas = "0.0";
     /**
      * 跟踪ID
      */

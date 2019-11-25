@@ -52,6 +52,8 @@ public class WalletServiceImpl implements WalletService {
     private Web3j web3j;
     @Autowired
     private TransactionManageService transactionManageService;
+    @Autowired
+    private EventService eventService;
 
     @Override
     public CreateWalletResponse createWallet() {
@@ -99,7 +101,7 @@ public class WalletServiceImpl implements WalletService {
                     try {
                         TransactionReceipt receipt = future.get();
                         log.info("The transaction has been confirmed. >>>> :[{}]",JSON.toJSONString(receipt));
-                        addSuccessEvent(assemblyTransactionCallModel(receipt,withdrawRequest));
+                        eventService.addSuccessEvent(receipt,withdrawRequest);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     } catch (ExecutionException e) {
@@ -120,17 +122,6 @@ public class WalletServiceImpl implements WalletService {
         }
     }
 
-    private WithdrawCallback assemblyTransactionCallModel(TransactionReceipt receipt,WithdrawRequest request) {
-        WithdrawCallback callback = new WithdrawCallback(CallbackTypeEnum.WITHDRAW_TYPE);
-        callback.setAmount(request.getAmount()+"");
-        callback.setGas(receipt.getGasUsed()+"");
-        callback.setRecepient(receipt.getTo());
-        callback.setSender(receipt.getFrom());
-        callback.setTxnHash(receipt.getTransactionHash());
-        callback.setTrace(request.getTrace());
-        return callback;
-    }
-
     private List<WithdrawRequest> validOrderRequest(List<WithdrawRequest> withdrawRequests) {
 
         List<WithdrawRequest> validList = new ArrayList<>();
@@ -144,23 +135,11 @@ public class WalletServiceImpl implements WalletService {
             } catch (Exception e) {
                 log.error(e.getMessage());
                 log.error("Throw withdraw order info:[{}]",JSON.toJSONString(withdrawRequest));
-                addErrEvent(withdrawRequest,e.getMessage());
+                eventService.addErrEvent(withdrawRequest,e.getMessage());
             }
         }
         return validList;
 
-    }
-
-    private void addSuccessEvent(WithdrawCallback response){
-        addEventQueue(response,Status.SUCCESS,"");
-    }
-
-    private void addErrEvent(WithdrawRequest withdrawRequest,String message){
-        addEventQueue(new WithdrawCallback(withdrawRequest.getAddress(), CallbackTypeEnum.WITHDRAW_TYPE),Status.FAIL,message);
-    }
-
-    private void addEventQueue(WithdrawCallback response, Status status, String message) {
-        SpringContext.getApplicationContext().publishEvent(new WithdrawEvent(this,response,status.getType(),message));
     }
 
     @Override
