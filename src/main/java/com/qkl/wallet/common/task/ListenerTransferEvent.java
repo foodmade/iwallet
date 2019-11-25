@@ -1,6 +1,8 @@
 package com.qkl.wallet.common.task;
 
 import com.alibaba.fastjson.JSON;
+import com.qkl.wallet.common.JedisKey;
+import com.qkl.wallet.common.RedisUtil;
 import com.qkl.wallet.common.SpringContext;
 import com.qkl.wallet.common.walletUtil.LightWallet;
 import com.qkl.wallet.contract.Token;
@@ -53,6 +55,10 @@ public class ListenerTransferEvent extends Thread {
                 .subscribe(monitor -> {
                     log.info("Monitor transfer event:{}",JSON.toJSONString(monitor));
                     try {
+                        if(!lockTxHash(monitor.log.getTransactionHash())){
+                            log.debug("Current trading order has been submitted.<><><><><><>");
+                            return;
+                        }
                         addEvent(monitor);
                     }catch (Exception e){
                         log.error(e.getMessage());
@@ -60,11 +66,17 @@ public class ListenerTransferEvent extends Thread {
                 });
     }
 
+    private boolean lockTxHash(String transactionHash) {
+        RedisUtil redisUtil = SpringContext.getBean(RedisUtil.class);
+        return redisUtil.tryGetLock(JedisKey.buildOrderLockKey(transactionHash),"1");
+    }
+
     private void addEvent(Token.TransferEventResponse eventResponse) {
         Assert.notNull(eventResponse, "Monitor event response data err:: Because this object is null");
         Assert.notNull(eventResponse.to, "Monitor event response data err:: Because toAddress is null");
         EventService eventService = SpringContext.getApplicationContext().getBean(EventService.class);
         Assert.notNull(eventService, "Failed to get [eventService] from SpringContext :::: Please restart server.");
+
         eventService.addSuccessEvent(eventResponse);
     }
 }

@@ -19,6 +19,10 @@ public class JedisKey {
         return buildKey("withdrawOrder",key);
     }
 
+    public static String buildOrderLockKey(String key){
+        return buildKey("lock",key);
+    }
+
     private static String buildKey(Object str1, Object... array) {
         StringBuffer stringBuffer = new StringBuffer(PREFIX);
         stringBuffer.append(CACHE_PREFIX).append(str1);
