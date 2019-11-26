@@ -12,11 +12,15 @@ import org.springframework.http.ResponseEntity;
 import org.web3j.crypto.*;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.core.methods.response.Web3ClientVersion;
 import org.web3j.protocol.exceptions.TransactionException;
 import org.web3j.protocol.http.HttpService;
+import org.web3j.protocol.websocket.WebSocketClient;
+import org.web3j.protocol.websocket.WebSocketService;
 import org.web3j.tx.Contract;
 import org.web3j.tx.Transfer;
 import org.web3j.tx.gas.DefaultGasProvider;
@@ -26,8 +30,13 @@ import org.web3j.utils.Numeric;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 @SpringBootTest
@@ -160,4 +169,28 @@ class WalletApplicationTests {
         ResponseEntity<JSONObject> responseEntity =  HttpUtils.postForEntity(url,map);
         System.out.println(JSON.toJSONString(responseEntity.getBody()));
     }
+
+
+    @Test
+    public void testWss() throws Exception {
+        Web3j web3j = connect("wss://kovan.infura.io/ws/v3/ef40dd3c018349959f1509fb679ea67d");
+        Web3ClientVersion clientVersion = web3j.web3ClientVersion().send();
+        System.out.println("version:" + clientVersion.getWeb3ClientVersion());
+    }
+
+    private static Web3j connect(String url) throws IOException {
+        Objects.requireNonNull(url, "ethereum.node.url cannot be null");
+        Web3j web3j;
+//////// WEBSOCKET ///////////////////////////////////
+        if (url.startsWith("ws")) {
+            WebSocketService web3jService = new WebSocketService(url, true);
+            web3jService.connect();
+            web3j = Web3j.build(web3jService);
+//////// HTTP ///////////////////////////////////
+        } else {
+            web3j = Web3j.build(new HttpService(url));
+        }
+        return web3j;
+    }
+
 }
