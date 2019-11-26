@@ -12,11 +12,15 @@ import org.springframework.http.ResponseEntity;
 import org.web3j.crypto.*;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.core.methods.response.Web3ClientVersion;
 import org.web3j.protocol.exceptions.TransactionException;
 import org.web3j.protocol.http.HttpService;
+import org.web3j.protocol.websocket.WebSocketClient;
+import org.web3j.protocol.websocket.WebSocketService;
 import org.web3j.tx.Contract;
 import org.web3j.tx.Transfer;
 import org.web3j.tx.gas.DefaultGasProvider;
@@ -26,15 +30,18 @@ import org.web3j.utils.Numeric;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URI;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 @SpringBootTest
-class WalletApplicationTests {
+public class WalletApplicationTests {
 
     @Test
-    void contextLoads() {
+    public void contextLoads() {
     }
 
     @Test
@@ -159,5 +166,32 @@ class WalletApplicationTests {
         map.put("sender","0xSend");
         ResponseEntity<JSONObject> responseEntity =  HttpUtils.postForEntity(url,map);
         System.out.println(JSON.toJSONString(responseEntity.getBody()));
+    }
+
+    public static void main(String[] args) throws Exception {
+        final WebSocketClient webSocketClient = new WebSocketClient(new URI("ws://kovan.infura.io/v3/ef40dd3c018349959f1509fb679ea67d"));
+        final boolean includeRawResponses = false;
+        final WebSocketService webSocketService = new WebSocketService(webSocketClient, includeRawResponses);
+
+        // Request to get a version of an Ethereum client
+        final Request<?, Web3ClientVersion> request = new Request<>(
+                // Name of an RPC method to call
+                "web3_clientVersion",
+                // Parameters for the method. "web3_clientVersion" does not expect any
+                Collections.<String>emptyList(),
+                // Service that is used to send a request
+                webSocketService,
+                // Type of an RPC call to get an Ethereum client version
+                Web3ClientVersion.class);
+
+        // Send an asynchronous request via WebSocket protocol
+        final CompletableFuture<Web3ClientVersion> reply = webSocketService.sendAsync(
+                request,
+                Web3ClientVersion.class);
+
+        // Get result of the reply
+        final Web3ClientVersion clientVersion = reply.get();
+
+        System.out.println("Version :{}" + clientVersion.getWeb3ClientVersion());
     }
 }

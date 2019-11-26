@@ -16,9 +16,17 @@ import org.web3j.abi.datatypes.Event;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.methods.request.EthFilter;
+import org.web3j.protocol.core.methods.response.Web3ClientVersion;
+import org.web3j.protocol.websocket.WebSocketClient;
+import org.web3j.protocol.websocket.WebSocketService;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class ListenerTransferEvent extends Thread {
@@ -34,6 +42,7 @@ public class ListenerTransferEvent extends Thread {
     public void run() {
         monitorTransferEvent();
     }
+
 
 
     private void monitorTransferEvent(){
