@@ -1,14 +1,14 @@
 package com.qkl.wallet.common;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisCommands;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -22,6 +22,11 @@ public class RedisUtil {
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+
+    private static final String LOCK_SUCCESS = "OK";
+    private static final String SET_IF_NOT_EXIST = "NX";
+    private static final String SET_WITH_EXPIRE_TIME = "EX";
+    private static final Long RELEASE_SUCCESS = 1L;
 
     /**
      * 指定缓存失效时间
@@ -562,6 +567,41 @@ public class RedisUtil {
 
     public Set<String> keys(String pattern){
         return redisTemplate.keys(pattern);
+    }
+
+
+
+    /**
+     * 尝试获取分布式锁
+     * @param lockKey 锁
+     * @param lockVal 值
+     * @param expireTime 超期时间
+     * @return 是否获取成功
+     */
+    public boolean tryGetLock(String lockKey, String lockVal, Long expireTime) {
+        String result = redisTemplate.execute((RedisCallback<String>) connection -> {
+            JedisCommands commands = (JedisCommands) connection.getNativeConnection();
+            String res = commands.set(lockKey, lockVal, SET_IF_NOT_EXIST, SET_WITH_EXPIRE_TIME, expireTime);
+            commands.persist(lockKey);
+            return res;
+        });
+        return LOCK_SUCCESS.equals(result);
+    }
+
+    public boolean tryGetLock(String lockKey, String lockVal){
+        return tryGetLock(lockKey, lockVal,1L);
+    }
+
+    /**
+     * 释放分布式锁
+     */
+    public boolean unLock(String lockKey, String lockVal) {
+        String script = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
+        Long result = redisTemplate.execute((RedisCallback<Long>) connection -> {
+            Object nativeConnection = connection.getNativeConnection();
+            return (Long)((Jedis) nativeConnection).eval(script, Collections.singletonList(lockKey), Collections.singletonList(lockVal));
+        });
+        return RELEASE_SUCCESS.equals(result);
     }
 
 }

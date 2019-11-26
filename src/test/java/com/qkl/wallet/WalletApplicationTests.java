@@ -5,7 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.qkl.wallet.common.HttpUtils;
 import com.qkl.wallet.contract.Token;
 import com.qkl.wallet.service.WalletService;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;

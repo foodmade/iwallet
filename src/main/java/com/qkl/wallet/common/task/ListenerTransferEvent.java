@@ -1,14 +1,14 @@
 package com.qkl.wallet.common.task;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.qkl.wallet.common.WebSocketClientInst;
-import com.qkl.wallet.common.WebsocketClientEndpoint;
-import com.qkl.wallet.config.ApplicationConfig;
+import com.qkl.wallet.common.JedisKey;
+import com.qkl.wallet.common.RedisUtil;
+import com.qkl.wallet.common.SpringContext;
+import com.qkl.wallet.common.walletUtil.LightWallet;
+import com.qkl.wallet.contract.Token;
+import com.qkl.wallet.service.impl.EventService;
 import lombok.extern.slf4j.Slf4j;
-import org.java_websocket.client.WebSocketClient;
-import org.java_websocket.drafts.Draft_10;
-import org.java_websocket.handshake.ServerHandshake;
+import org.springframework.util.Assert;
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
@@ -18,11 +18,7 @@ import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.EthFilter;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 @Slf4j
 public class ListenerTransferEvent extends Thread {
@@ -36,90 +32,51 @@ public class ListenerTransferEvent extends Thread {
 
     @Override
     public void run() {
+        monitorTransferEvent();
+    }
 
-//        Credentials.create(ApplicationConfig.secretKey);
-/*        Event event = new Event("transfer",
-                Arrays.asList(new TypeReference<Address>() {}, new TypeReference<Uint256>() {}));*/
 
-/*        EthFilter filter = new EthFilter(DefaultBlockParameterName.EARLIEST,
-                DefaultBlockParameterName.LATEST, ApplicationConfig.contractAddress);
+    private void monitorTransferEvent(){
 
-        filter.addSingleTopic(EventEncoder.encode(event));*/
+        Token token = LightWallet.loadTokenClient(web3j);
         Event event = new Event("Transfer",
                 Arrays.asList(
                         new TypeReference<Address>() {
                         },
                         new TypeReference<Address>() {
-                        },new TypeReference<Uint256>(){}));
-
-        EthFilter filter = new EthFilter(
+                        },
+                        new TypeReference<Uint256>(){}));
+        final EthFilter ethFilter = new EthFilter(
+                DefaultBlockParameterName.EARLIEST,
                 DefaultBlockParameterName.LATEST,
-                DefaultBlockParameterName.LATEST,
-                ApplicationConfig.contractAddress);
-        filter.addSingleTopic(EventEncoder.encode(event));
-
-
-//        web3j.ethLogObservable(filter).subscribe(monitor -> {
-//            System.out.println("ethLogObservable:" + JSON.toJSONString(monitor));
-//        });
-//
-        web3j.transactionFlowable().subscribe(monitor -> {
-            log.info("Monitor transfer event ：\n");
-            log.info(JSON.toJSONString(monitor));
-        });
-
-        log.info("Contract event monitoring started successfully.<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>");
-    }
-
-    private void testWebsocket() throws Exception {
-            new Thread(() ->{
-                    // open websocket
-                    final WebsocketClientEndpoint clientEndPoint;
+                token.getContractAddress());
+        ethFilter.addSingleTopic(EventEncoder.encode(event));
+        token.transferEventFlowable(ethFilter)
+                .subscribe(monitor -> {
+                    log.info("Monitor transfer event:{}",JSON.toJSONString(monitor));
                     try {
-                        clientEndPoint = new WebsocketClientEndpoint(new URI("wss://mainnet.infura.io/ws"));
-                        // add listener
-                        clientEndPoint.addMessageHandler(message -> System.out.println("Handler:"+message));
-                        // send message to websocket
-                        clientEndPoint.sendMessage("{'jsonrpc':'2.0','method':'eth_newFilter','params':[],'id':1}");
-                    } catch (URISyntaxException e) {
-                        e.printStackTrace();
+                        if(!lockTxHash(monitor.log.getTransactionHash())){
+                            log.debug("Current trading order has been submitted.<><><><><><>");
+                            return;
+                        }
+                        addEvent(monitor);
+                    }catch (Exception e){
+                        log.error(e.getMessage());
                     }
-            }).start();
+                });
     }
 
-    private void testWebSocket2() throws Exception {
-        WebSocketClient mWs = new WebSocketClient( new URI( "wss://mainnet.infura.io/ws" ), new Draft_10() )
-        {
-            @Override
-            public void onMessage( String message ) {
-                JSONObject obj = JSON.parseObject(message);
-                String channel = obj.getString("channel");
-                System.out.println("接受到消息：" +channel);
-            }
+    private boolean lockTxHash(String transactionHash) {
+        RedisUtil redisUtil = SpringContext.getBean(RedisUtil.class);
+        return redisUtil.tryGetLock(JedisKey.buildOrderLockKey(transactionHash),"1");
+    }
 
-            @Override
-            public void onOpen( ServerHandshake handshake ) {
-                System.out.println( "opened connection" );
-            }
+    private void addEvent(Token.TransferEventResponse eventResponse) {
+        Assert.notNull(eventResponse, "Monitor event response data err:: Because this object is null");
+        Assert.notNull(eventResponse.to, "Monitor event response data err:: Because toAddress is null");
+        EventService eventService = SpringContext.getApplicationContext().getBean(EventService.class);
+        Assert.notNull(eventService, "Failed to get [eventService] from SpringContext :::: Please restart server.");
 
-            @Override
-            public void onClose( int code, String reason, boolean remote ) {
-                System.out.println( "closed connection" );
-            }
-
-            @Override
-            public void onError( Exception ex ) {
-                ex.printStackTrace();
-            }
-
-        };
-        //open websocket
-        mWs.connect();
-        JSONObject obj = new JSONObject();
-        obj.put("event", "addChannel");
-        obj.put("channel", "ok_btccny_ticker");
-        String message = obj.toString();
-        //send message
-        mWs.send(message);
+        eventService.addSuccessEvent(eventResponse);
     }
 }
