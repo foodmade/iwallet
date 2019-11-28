@@ -1,6 +1,7 @@
 package com.qkl.wallet.core.web3j;
 
 import com.alibaba.fastjson.JSONObject;
+import com.qkl.wallet.common.okHttp.HttpServiceEx;
 import com.qkl.wallet.config.ApplicationConfig;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import lombok.extern.slf4j.Slf4j;
@@ -56,7 +57,8 @@ public class BeanStruct {
 //        service.subscribe(request,"eth_newPendingTransactionFilter", PendingTransactionNotification.class);
 //
 //        Web3j web3j = Web3j.build(service);
-        Web3j web3j = Web3j.build(new HttpService(ApplicationConfig.blockHost));
+//        Web3j web3j = Web3j.build(new HttpService(ApplicationConfig.blockHost));
+        Web3j web3j = Web3j.build(new HttpServiceEx(ApplicationConfig.blockHost));
 
         Web3ClientVersion web3ClientVersion;
         try {

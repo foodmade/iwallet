@@ -40,10 +40,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 @SpringBootTest
-class WalletApplicationTests {
+public class WalletApplicationTests {
 
     @Test
-    void contextLoads() {
+    public void contextLoads() {
     }
 
     @Test
@@ -173,9 +173,36 @@ class WalletApplicationTests {
 
     @Test
     public void testWss() throws Exception {
-        Web3j web3j = connect("wss://kovan.infura.io/ws/v3/ef40dd3c018349959f1509fb679ea67d");
+        Web3j web3j = connect("wss://ropsten.infura.io/ws/v3/ef40dd3c018349959f1509fb679ea67d");
         Web3ClientVersion clientVersion = web3j.web3ClientVersion().send();
         System.out.println("version:" + clientVersion.getWeb3ClientVersion());
+    }
+
+    @Test
+    public void testWss1() throws Exception {
+        final WebSocketClient webSocketClient = new WebSocketClient(new URI("wss://mainnet.infura.io/ws/v3/ef40dd3c018349959f1509fb679ea67d"));
+        final boolean includeRawResponses = false;
+        final WebSocketService webSocketService = new WebSocketService(webSocketClient, includeRawResponses);
+
+        // Request to get a version of an Ethereum client
+        final Request<?, Web3ClientVersion> request = new Request<>(
+                // Name of an RPC method to call
+                "web3_clientVersion",
+                // Parameters for the method. "web3_clientVersion" does not expect any
+                Collections.<String>emptyList(),
+                // Service that is used to send a request
+                webSocketService,
+                // Type of an RPC call to get an Ethereum client version
+                Web3ClientVersion.class);
+
+        // Send an asynchronous request via WebSocket protocol
+        final CompletableFuture<Web3ClientVersion> reply = webSocketService.sendAsync(
+                request,
+                Web3ClientVersion.class);
+
+        //// Get result of the reply
+        final Web3ClientVersion clientVersion = reply.get();
+        System.out.println(clientVersion.getWeb3ClientVersion());
     }
 
     private static Web3j connect(String url) throws IOException {

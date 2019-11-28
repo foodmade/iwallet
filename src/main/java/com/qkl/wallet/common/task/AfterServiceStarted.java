@@ -17,6 +17,6 @@ public class AfterServiceStarted implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
         //Start transfer event monitor work thread.
-        new ListenerTransferEvent(web3j).start();
+        new ContractTransferEvent(web3j).start();
     }
 }
