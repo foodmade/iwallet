@@ -6,6 +6,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
+import javax.validation.Valid;
+
 /**
  * @Author xiaom
  * @Date 2019/11/20 16:29
@@ -51,6 +53,11 @@ public class ApplicationConfig {
      */
     public static String callBackHost;
 
+    /**
+     * 系统默认ETH钱包账户
+     */
+    public static String walletETHAddress;
+
     @Value("${wallet.contract.address}")
     public void setContractAddress(String address){
         ApplicationConfig.contractAddress = address;
@@ -89,5 +96,10 @@ public class ApplicationConfig {
     @Value("${host.callback}")
     public void setCallBackHost(String callBackHost) {
         ApplicationConfig.callBackHost = callBackHost;
+    }
+
+    @Value("${wallet.eth.address}")
+    public void setWalletETHAddress(String walletETHAddress) {
+        ApplicationConfig.walletETHAddress = walletETHAddress;
     }
 }

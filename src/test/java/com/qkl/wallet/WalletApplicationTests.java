@@ -2,13 +2,17 @@ package com.qkl.wallet;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.qkl.wallet.common.Const;
 import com.qkl.wallet.common.HttpUtils;
 import com.qkl.wallet.contract.Token;
 import com.qkl.wallet.service.WalletService;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.web.WebAppConfiguration;
 import org.web3j.crypto.*;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
@@ -39,8 +43,13 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-@SpringBootTest
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = WalletApplication.class)
+@WebAppConfiguration
 public class WalletApplicationTests {
+
+    @Autowired
+    private WalletService walletService;
 
     @Test
     public void contextLoads() {
@@ -142,9 +151,6 @@ public class WalletApplicationTests {
         System.out.println("完毕："+JSON.toJSONString(receipt));
     }
 
-    @Autowired
-    private WalletService walletService;
-
     @Test
     public void testCreateWallet1(){
         JSON.toJSONString(walletService.createWallet());
@@ -176,6 +182,11 @@ public class WalletApplicationTests {
         Web3j web3j = connect("wss://ropsten.infura.io/ws/v3/ef40dd3c018349959f1509fb679ea67d");
         Web3ClientVersion clientVersion = web3j.web3ClientVersion().send();
         System.out.println("version:" + clientVersion.getWeb3ClientVersion());
+    }
+
+    @Test
+    public void testTransferEth(){
+        walletService.transferEth("0xdF67ab61A941f4001a95255c57f586e7f99421f9",new BigDecimal("0.01").multiply(new BigDecimal(Const._UNIT)));
     }
 
     @Test

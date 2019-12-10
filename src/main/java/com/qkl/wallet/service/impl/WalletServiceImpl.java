@@ -2,6 +2,8 @@ package com.qkl.wallet.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.qkl.wallet.common.Const;
+import com.qkl.wallet.common.enumeration.ExceptionEnum;
+import com.qkl.wallet.common.exception.BadRequestException;
 import com.qkl.wallet.common.exception.InvalidException;
 import com.qkl.wallet.common.walletUtil.LightWallet;
 import com.qkl.wallet.common.walletUtil.outModel.WalletAddressInfo;
@@ -13,14 +15,22 @@ import com.qkl.wallet.vo.ResultBean;
 import com.qkl.wallet.vo.in.WithdrawRequest;
 import com.qkl.wallet.vo.out.BalanceResponse;
 import com.qkl.wallet.vo.out.CreateWalletResponse;
+import com.qkl.wallet.vo.out.GasResponse;
 import com.qkl.wallet.vo.out.WithdrawResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.web3j.crypto.Credentials;
+import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameter;
+import org.web3j.protocol.core.methods.response.EthGasPrice;
+import org.web3j.protocol.core.methods.response.EthGetBalance;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.tx.Transfer;
+import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
 
 import java.io.IOException;
@@ -124,20 +134,63 @@ public class WalletServiceImpl implements WalletService {
     }
 
     @Override
-    public ResultBean<BalanceResponse> getTokenBalance(String address) {
+    public BalanceResponse getTokenBalance(@NonNull String address) {
         try {
             Assert.notNull(address,"Wallet address must not be null.");
             //Load contract client.
-            return ResultBean.success(new BalanceResponse(getTokenBalanceOfAddress(address)));
+            return new BalanceResponse(getTokenBalanceOfAddress(address));
         }catch (Exception e){
             log.error("Query contract address balance throw error. >>> [{}]",e.getMessage());
-            return ResultBean.exception(e.getMessage());
+            throw new BadRequestException(ExceptionEnum.SERVERERROR);
+        }
+    }
+
+    @NonNull
+    @Override
+    public BalanceResponse getETHBalance(@NonNull String address) {
+        try {
+            EthGetBalance balance = web3j.ethGetBalance(address, DefaultBlockParameter.valueOf("latest")).send();
+            return new BalanceResponse(balance.getBalance());
+        } catch (IOException e) {
+            log.error("Query ETH balance throw error. >>> [{}]",e.getMessage());
+            throw new BadRequestException(ExceptionEnum.BAD_REQUEST_ERR);
         }
     }
 
     @Override
-    public ResultBean<BalanceResponse> getETHBalance(String address) {
-        return null;
+    public Boolean transferEth(String toAddress, BigDecimal amount) {
+
+        //Valid system wallet account balance is it enough.
+        BigInteger systemWalletBalance = getETHBalance(ApplicationConfig.walletETHAddress).getBalance();
+
+        Assert.isTrue(amount.compareTo(new BigDecimal(systemWalletBalance)) < 0,"Insufficient available balance in system account");
+
+        Credentials credentials = LightWallet.buildDefaultCredentials();
+
+        try {
+            TransactionReceipt transactionReceipt = Transfer.sendFunds(
+                    web3j, credentials, toAddress,
+                    amount, Convert.Unit.WEI).send();
+            log.info("Eth transfer successful. transactionReceipt:{}",JSON.toJSONString(transactionReceipt));
+        } catch (Exception e) {
+            log.error("Eth wallet transfer throw error. >>> {}",e.getMessage());
+            log.error("Basis info params. toAddress:[{}] amount:[{}]",toAddress,amount);
+            e.printStackTrace();
+            throw new BadRequestException(ExceptionEnum.BAD_REQUEST_ERR);
+        }
+        return true;
+    }
+
+    @Override
+    public GasResponse getEthGas() {
+        EthGasPrice ethGasPrice;
+        try {
+            ethGasPrice = web3j.ethGasPrice().sendAsync().get();
+            return new GasResponse(ethGasPrice.getGasPrice());
+        } catch (Exception e) {
+            log.error("Get eth recent gas price throw error. message:[{}]",e.getMessage());
+            throw new BadRequestException(e.getMessage());
+        }
     }
 
     private BigInteger getTokenBalanceOfAddress(String address) throws ExecutionException, InterruptedException {

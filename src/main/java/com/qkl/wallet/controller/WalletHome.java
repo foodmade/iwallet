@@ -6,6 +6,7 @@ import com.qkl.wallet.vo.ResultBean;
 import com.qkl.wallet.vo.in.WithdrawParams;
 import com.qkl.wallet.vo.out.BalanceResponse;
 import com.qkl.wallet.vo.out.CreateWalletResponse;
+import com.qkl.wallet.vo.out.GasResponse;
 import com.qkl.wallet.vo.out.WithdrawResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -15,7 +16,9 @@ import org.web3j.protocol.Web3j;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.tx.gas.DefaultGasProvider;
 
+import javax.validation.constraints.NotNull;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.HashMap;
 
@@ -54,16 +57,38 @@ public class WalletHome {
     /**
      * 0xfe1dd454d3e6f947dae40cf9a773247eac44883a
      * 获取代币余额
-     * @return
+     * @return 代币余额
      */
     @GetMapping(value = "getTokenBalance")
-    public ResultBean<BalanceResponse> getBalance(@RequestParam String address){
-        return walletService.getTokenBalance(address);
+    public ResultBean<BalanceResponse> getTokenBalance(@RequestParam @NotNull(message = "Address must not be null") String address){
+        return ResultBean.success(walletService.getTokenBalance(address));
+    }
+
+    /**
+     * 获取ETH钱包余额
+     * @param address 钱包地址
+     */
+    @GetMapping(value = "/getETHBalance")
+    public ResultBean<BalanceResponse> getETHBalance(@RequestParam @NotNull(message = "Address must not be null") String address){
+        return ResultBean.success(walletService.getETHBalance(address));
+    }
+
+    /**
+     * 以太币之间的转账
+     */
+    @GetMapping(value = "/eth_transfer")
+    public ResultBean<Boolean> eth_transfer(@RequestParam @NotNull(message = "Address must not be null")String toAddress,
+                                            @RequestParam @NotNull(message = "The transaction amount cannot be empty")BigDecimal amount){
+        return ResultBean.success(walletService.transferEth(toAddress,amount));
+    }
+
+    @GetMapping(value = "/get_eth_gas")
+    public ResultBean<GasResponse> getEthGas(){
+        return ResultBean.success(walletService.getEthGas());
     }
 
     /**
      * 部署合约代码
-     * @return
      */
     @GetMapping(value = "deployContract")
     public ResultBean deployContract(@RequestParam String address,@RequestParam String type) throws Exception {

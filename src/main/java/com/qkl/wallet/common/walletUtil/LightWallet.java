@@ -67,9 +67,16 @@ public class LightWallet {
      * 打开合约客户端
      */
     public static Token loadTokenClient(Web3j web3j){
-        Credentials credentials = Credentials.create(ApplicationConfig.secretKey);
+        Credentials credentials = buildDefaultCredentials();
         //Load contract client.
         return Token.load(ApplicationConfig.contractAddress,web3j,credentials, Contract.GAS_PRICE,Contract.GAS_LIMIT);
+    }
+
+    /**
+     * 加载默认钱包证书
+     */
+    public static Credentials buildDefaultCredentials(){
+        return Credentials.create(ApplicationConfig.secretKey);
     }
 
 }
