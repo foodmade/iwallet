@@ -18,14 +18,16 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class HttpServiceEx extends HttpService {
 
+    private static final Integer HTTP_TIME_OUT = 20;
+
     private static OkHttpClient createOkHttpClient() {
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
         configureLogging(builder);
         builder.retryOnConnectionFailure(true);
-        log.info("---------设置Http超时时间--------{}秒",120);
+        log.info("---------设置Http超时时间--------{}秒",HTTP_TIME_OUT);
         builder.connectionPool(new ConnectionPool())
-                .connectTimeout(120, TimeUnit.SECONDS)
-                .readTimeout(120, TimeUnit.SECONDS).build();
+                .connectTimeout(HTTP_TIME_OUT, TimeUnit.SECONDS)
+                .readTimeout(HTTP_TIME_OUT, TimeUnit.SECONDS).build();
         return builder.build();
     }
 
