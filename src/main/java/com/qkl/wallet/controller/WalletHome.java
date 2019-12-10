@@ -4,7 +4,6 @@ import com.qkl.wallet.contract.Token;
 import com.qkl.wallet.service.WalletService;
 import com.qkl.wallet.vo.ResultBean;
 import com.qkl.wallet.vo.in.WithdrawParams;
-import com.qkl.wallet.vo.in.WithdrawRequest;
 import com.qkl.wallet.vo.out.BalanceResponse;
 import com.qkl.wallet.vo.out.CreateWalletResponse;
 import com.qkl.wallet.vo.out.WithdrawResponse;
@@ -13,17 +12,12 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
-import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.protocol.http.HttpService;
-import org.web3j.tx.Contract;
 import org.web3j.tx.gas.DefaultGasProvider;
 
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import static com.qkl.wallet.common.UtilsService.toDecimal;
 
 /**
  * @Author xiaom
@@ -53,7 +47,7 @@ public class WalletHome {
      * 提币
      */
     @PostMapping(value = "withdraw")
-    public WithdrawResponse withdraw(@RequestBody WithdrawParams params){
+    public WithdrawResponse withdraw(@RequestBody WithdrawParams params) throws IOException {
         return walletService.withdraw(params.getRequest());
     }
 
@@ -62,9 +56,9 @@ public class WalletHome {
      * 获取代币余额
      * @return
      */
-    @GetMapping(value = "getBalance")
+    @GetMapping(value = "getTokenBalance")
     public ResultBean<BalanceResponse> getBalance(@RequestParam String address){
-        return walletService.getBalance(address);
+        return walletService.getTokenBalance(address);
     }
 
     /**

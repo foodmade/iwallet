@@ -2,25 +2,17 @@ package com.qkl.wallet.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.qkl.wallet.common.Const;
-import com.qkl.wallet.common.JedisKey;
-import com.qkl.wallet.common.RedisUtil;
-import com.qkl.wallet.common.SpringContext;
-import com.qkl.wallet.common.enumeration.CallbackTypeEnum;
-import com.qkl.wallet.common.enumeration.ExceptionEnum;
-import com.qkl.wallet.common.enumeration.Status;
 import com.qkl.wallet.common.exception.InvalidException;
 import com.qkl.wallet.common.walletUtil.LightWallet;
 import com.qkl.wallet.common.walletUtil.outModel.WalletAddressInfo;
 import com.qkl.wallet.config.ApplicationConfig;
 import com.qkl.wallet.contract.Token;
-import com.qkl.wallet.core.event.WithdrawEvent;
 import com.qkl.wallet.service.TransactionManageService;
 import com.qkl.wallet.service.WalletService;
 import com.qkl.wallet.vo.ResultBean;
 import com.qkl.wallet.vo.in.WithdrawRequest;
 import com.qkl.wallet.vo.out.BalanceResponse;
 import com.qkl.wallet.vo.out.CreateWalletResponse;
-import com.qkl.wallet.vo.out.WithdrawCallback;
 import com.qkl.wallet.vo.out.WithdrawResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +23,7 @@ import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.utils.Numeric;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -69,57 +62,45 @@ public class WalletServiceImpl implements WalletService {
     }
 
     @Override
-    public WithdrawResponse withdraw(List<WithdrawRequest> withdrawRequests) {
-        try {
+    public WithdrawResponse withdraw(List<WithdrawRequest> withdrawRequests) throws IOException {
+        //Invalid withdraw order list.
+        withdrawRequests = validOrderRequest(withdrawRequests);
 
-            //Invalid withdraw order list.
-            withdrawRequests = validOrderRequest(withdrawRequests);
-
-            if(withdrawRequests.isEmpty()){
-                return new WithdrawResponse("");
-            }
-            //Load contract client.
-            Token myToken = LightWallet.loadTokenClient(web3j);
-
-            log.info("Contract valid:[{}] address:[{}]",myToken.isValid(),myToken.getContractAddress());
-
-            if(!myToken.isValid()){
-                throw new InvalidException("Contract address invalid. Please contact the administrator to redeploy");
-            }
-
-            for (WithdrawRequest withdrawRequest : withdrawRequests) {
-                //Cache this order basis info.
-                transactionManageService.cacheTransactionOrder(withdrawRequest);
-
-                log.info("Start submitting a transfer request.");
-                CompletableFuture<TransactionReceipt> future = myToken
-                        .transfer(withdrawRequest.getAddress(),withdrawRequest.getAmount().toBigInteger().multiply(Const._UNIT))
-                        .sendAsync();
-                log.info("Transaction request submitted. Start listening thread.");
-
-                new Thread(() -> {
-                    try {
-                        TransactionReceipt receipt = future.get();
-                        log.info("The transaction has been confirmed. >>>> :[{}]",JSON.toJSONString(receipt));
-                        eventService.addSuccessEvent(receipt,withdrawRequest);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    } catch (ExecutionException e) {
-                        e.printStackTrace();
-                    }
-                }).start();
-
-                log.info("Transfer successful. >>> Waiting for blockchain confirmation transaction.");
-            }
+        if (withdrawRequests.isEmpty()) {
             return new WithdrawResponse("");
-        }catch (InvalidException ex){
-            log.error(ex.getMessage());
-            return null;
-        } catch (Exception e){
-            log.error("Wallet service internal throw error. exMsg:[{}]",e.getMessage());
-            e.printStackTrace();
-            return null;
         }
+        //Load contract client.
+        Token myToken = LightWallet.loadTokenClient(web3j);
+
+        log.info("Contract valid:[{}] address:[{}]", myToken.isValid(), myToken.getContractAddress());
+
+        if (!myToken.isValid()) {
+            throw new InvalidException("Contract address invalid. Please contact the administrator to redeploy");
+        }
+
+        for (WithdrawRequest withdrawRequest : withdrawRequests) {
+            //Cache this order basis info.
+            transactionManageService.cacheTransactionOrder(withdrawRequest);
+
+            log.info("Start submitting a transfer request.");
+            CompletableFuture<TransactionReceipt> future = myToken
+                    .transfer(withdrawRequest.getAddress(), withdrawRequest.getAmount().toBigInteger().multiply(Const._UNIT))
+                    .sendAsync();
+            log.info("Transaction request submitted. Start listening thread.");
+
+            new Thread(() -> {
+                try {
+                    TransactionReceipt receipt = future.get();
+                    log.info("The transaction has been confirmed. >>>> :[{}]", JSON.toJSONString(receipt));
+                    eventService.addSuccessEvent(receipt, withdrawRequest);
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
+            }).start();
+
+            log.info("Transfer successful. >>> Waiting for blockchain confirmation transaction.");
+        }
+        return new WithdrawResponse("");
     }
 
     private List<WithdrawRequest> validOrderRequest(List<WithdrawRequest> withdrawRequests) {
@@ -143,18 +124,23 @@ public class WalletServiceImpl implements WalletService {
     }
 
     @Override
-    public ResultBean<BalanceResponse> getBalance(String address) {
+    public ResultBean<BalanceResponse> getTokenBalance(String address) {
         try {
             Assert.notNull(address,"Wallet address must not be null.");
             //Load contract client.
-            return ResultBean.success(new BalanceResponse(getBalanceOfAddress(address)));
+            return ResultBean.success(new BalanceResponse(getTokenBalanceOfAddress(address)));
         }catch (Exception e){
             log.error("Query contract address balance throw error. >>> [{}]",e.getMessage());
             return ResultBean.exception(e.getMessage());
         }
     }
 
-    private BigInteger getBalanceOfAddress(String address) throws ExecutionException, InterruptedException {
+    @Override
+    public ResultBean<BalanceResponse> getETHBalance(String address) {
+        return null;
+    }
+
+    private BigInteger getTokenBalanceOfAddress(String address) throws ExecutionException, InterruptedException {
         Token myToken = LightWallet.loadTokenClient(web3j);
         return myToken.balanceOf(address).sendAsync().get();
     }
