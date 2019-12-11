@@ -33,7 +33,7 @@ public interface WalletService {
      * @param address 钱包地址
      * @return {@link com.qkl.wallet.vo.out.BalanceResponse}
      */
-    BalanceResponse getTokenBalance(@NonNull String address);
+    BalanceResponse getTokenBalance(@NonNull String address,@NonNull String tokenType);
 
     /**
      * 获取ETH钱包余额

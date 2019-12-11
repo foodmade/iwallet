@@ -3,12 +3,15 @@ package com.qkl.wallet.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.qkl.wallet.common.Const;
 import com.qkl.wallet.common.enumeration.ExceptionEnum;
+import com.qkl.wallet.common.enumeration.TokenTypeEnum;
 import com.qkl.wallet.common.exception.BadRequestException;
 import com.qkl.wallet.common.exception.InvalidException;
 import com.qkl.wallet.common.walletUtil.LightWallet;
 import com.qkl.wallet.common.walletUtil.outModel.WalletAddressInfo;
 import com.qkl.wallet.config.ApplicationConfig;
+import com.qkl.wallet.contract.IToken;
 import com.qkl.wallet.contract.Token;
+import com.qkl.wallet.core.ContractMapper;
 import com.qkl.wallet.service.TransactionManageService;
 import com.qkl.wallet.service.WalletService;
 import com.qkl.wallet.vo.ResultBean;
@@ -38,6 +41,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -134,14 +138,18 @@ public class WalletServiceImpl implements WalletService {
     }
 
     @Override
-    public BalanceResponse getTokenBalance(@NonNull String address) {
+    public BalanceResponse getTokenBalance(@NonNull String address,@NonNull String tokenType) {
         try {
             Assert.notNull(address,"Wallet address must not be null.");
+            IToken iToken = ContractMapper.get(tokenType);
+            if(iToken == null){
+                throw new Exception("Exception TokenType");
+            }
             //Load contract client.
-            return new BalanceResponse(getTokenBalanceOfAddress(address));
+            return new BalanceResponse(iToken.balanceOf(address).send());
         }catch (Exception e){
             log.error("Query contract address balance throw error. >>> [{}]",e.getMessage());
-            throw new BadRequestException(ExceptionEnum.SERVERERROR);
+            throw new BadRequestException(e.getMessage());
         }
     }
 

@@ -37,6 +37,10 @@ public class ContractConfiguration {
             log.error("TokenConfigs example is null. Not executed loadContractObject method.");
             return;
         }
+
+        //Init web3j
+        SpringContext.getBean(Web3j.class);
+
         log.info(">>>>>>>>>>>>>>>>>>>>>Start constructing the contract loader<<<<<<<<<<<<<<<<<<<<<<");
         moduleLog("Token json config parent node:[{}]. child:[{}]", tokenConfigs.getTokenConfigs().size(),countChild());
 
@@ -63,6 +67,7 @@ public class ContractConfiguration {
                 }
                 moduleLog("Structure contract loader. tokenName:[{}],class loader path:[{}] ",childToken.getToken_name(),childToken.getContract_class_path());
                 try {
+                    //Load contract.
                     Object contractExample = Class.forName(childToken.getContract_class_path())
                             .getMethod("load"
                                     ,String.class
@@ -77,10 +82,10 @@ public class ContractConfiguration {
                         continue;
                     }
                     if(!Boolean.parseBoolean(valid+"")){
-                        moduleLog("Contract valid:[{}],TokenName:[{}] address:[{}]",valid,childToken.getToken_name(),childToken.getContract_address());
+                        moduleLog("Contract load failed. TokenName:[{}] address:[{}]",childToken.getToken_name(),childToken.getContract_address());
                         continue;
                     }
-                    moduleLog("TokenName:[{}] address:[{}] valid:[{}]",childToken.getToken_name(),childToken.getContract_address(),valid);
+                    moduleLog("Contract load successful. TokenName:[{}] address:[{}]",childToken.getToken_name(),childToken.getContract_address());
                     ContractMapper.put(childToken.getToken_name(),contractExample);
                     moduleLog("-------------------------------------------------------------------------");
                 } catch (Exception e) {

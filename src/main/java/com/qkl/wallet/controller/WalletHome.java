@@ -1,6 +1,8 @@
 package com.qkl.wallet.controller;
 
+import com.qkl.wallet.common.Const;
 import com.qkl.wallet.contract.Token;
+import com.qkl.wallet.contract.Usdt;
 import com.qkl.wallet.service.WalletService;
 import com.qkl.wallet.vo.ResultBean;
 import com.qkl.wallet.vo.in.WithdrawParams;
@@ -60,8 +62,9 @@ public class WalletHome {
      * @return 代币余额
      */
     @GetMapping(value = "getTokenBalance")
-    public ResultBean<BalanceResponse> getTokenBalance(@RequestParam @NotNull(message = "Address must not be null") String address){
-        return ResultBean.success(walletService.getTokenBalance(address));
+    public ResultBean<BalanceResponse> getTokenBalance(@RequestParam @NotNull(message = "Address must not be null") String address,
+                                                       @RequestParam @NotNull(message = "TokenType must not be null") String tokenType){
+        return ResultBean.success(walletService.getTokenBalance(address,tokenType));
     }
 
     /**
@@ -92,9 +95,9 @@ public class WalletHome {
      */
     @GetMapping(value = "deployContract")
     public ResultBean deployContract(@RequestParam String address,@RequestParam String type) throws Exception {
-        Web3j web3j = Web3j.build(new HttpService());
         Credentials credentials = Credentials.create(address);
-        Token myToken = Token.deploy(web3j,credentials,new DefaultGasProvider(),BigInteger.valueOf(10000000).multiply(BigInteger.valueOf(1000000000000000000L)),type,type).send();
+//        Token myToken = Token.deploy(web3j,credentials,new DefaultGasProvider(),BigInteger.valueOf(2500).multiply(Const._UNIT),type,type).send();
+        Usdt myToken = Usdt.deploy(web3j,credentials,new DefaultGasProvider(),BigInteger.valueOf(2500).multiply(Const._UNIT),type,type,BigInteger.valueOf(100)).send();
         System.out.println("合约部署完毕 状态:" + myToken.isValid() + " 地址：" + myToken.getContractAddress());
         return ResultBean.success(null);
     }

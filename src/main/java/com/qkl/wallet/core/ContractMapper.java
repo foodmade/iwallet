@@ -1,6 +1,7 @@
 package com.qkl.wallet.core;
 
 import com.qkl.wallet.common.BeanUtils;
+import com.qkl.wallet.contract.IToken;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -28,13 +29,13 @@ public class ContractMapper {
     /**
      * Get contract Object.
      */
-    public static <T> T get(String contractName,Class<T> cls) throws Exception {
+    public static IToken get(String contractName) throws Exception {
         Object loaderObj = contractLoaderMaps.get(contractName);
         if(loaderObj == null){
-            throw new Exception("This contract loader is not instantiated. Contract name :[{"+contractName+"}]");
+            throw new Exception("This contract loader is not instantiated. Contract name :["+contractName+"]");
         }
         try {
-            return BeanUtils.transformFrom(loaderObj,cls);
+            return (IToken)loaderObj;
         }catch (Exception e){
             log.error("Get contract loader failed. Bean transFrom Object throw error. message:[{}]",e.getMessage());
         }
