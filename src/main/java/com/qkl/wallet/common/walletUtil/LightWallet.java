@@ -76,7 +76,11 @@ public class LightWallet {
      * 加载默认钱包证书
      */
     public static Credentials buildDefaultCredentials(){
-        return Credentials.create(ApplicationConfig.secretKey);
+        return buildCredentials(ApplicationConfig.secretKey);
+    }
+
+    public static Credentials buildCredentials(String secretKey){
+        return Credentials.create(secretKey);
     }
 
 }
