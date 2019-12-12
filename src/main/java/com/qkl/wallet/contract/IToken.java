@@ -11,4 +11,6 @@ public interface IToken {
 
     RemoteFunctionCall<TransactionReceipt> transferFrom(String _from, String _to, BigInteger _value);
 
+    RemoteFunctionCall<TransactionReceipt> transfer(String _to, BigInteger _value);
+
 }

@@ -5,6 +5,7 @@ import com.qkl.wallet.contract.Token;
 import com.qkl.wallet.contract.Usdt;
 import com.qkl.wallet.service.WalletService;
 import com.qkl.wallet.vo.ResultBean;
+import com.qkl.wallet.vo.in.BalanceParams;
 import com.qkl.wallet.vo.in.WithdrawParams;
 import com.qkl.wallet.vo.out.BalanceResponse;
 import com.qkl.wallet.vo.out.CreateWalletResponse;
@@ -18,6 +19,7 @@ import org.web3j.protocol.Web3j;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.tx.gas.DefaultGasProvider;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -53,7 +55,7 @@ public class WalletHome {
      */
     @PostMapping(value = "withdraw")
     public WithdrawResponse withdraw(@RequestBody WithdrawParams params) throws IOException {
-        return walletService.withdraw(params.getRequest());
+        return walletService.withdraw(params);
     }
 
     /**
@@ -74,6 +76,14 @@ public class WalletHome {
     @GetMapping(value = "/getETHBalance")
     public ResultBean<BalanceResponse> getETHBalance(@RequestParam @NotNull(message = "Address must not be null") String address){
         return ResultBean.success(walletService.getETHBalance(address));
+    }
+
+    /**
+     * 获取平台余额
+     */
+    @PostMapping(value = "/getPlatformBalance")
+    public ResultBean<BalanceResponse> getPlatformBalance(@RequestBody @Valid  BalanceParams balanceParams){
+        return ResultBean.success(walletService.getPlatformBalance(balanceParams.getChain(),balanceParams.getTokenName()));
     }
 
     /**

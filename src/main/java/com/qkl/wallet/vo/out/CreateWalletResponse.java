@@ -1,6 +1,5 @@
 package com.qkl.wallet.vo.out;
 
-import com.qkl.wallet.vo.AbstractResponse;
 import lombok.Data;
 
 /**

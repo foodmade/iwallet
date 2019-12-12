@@ -26,7 +26,7 @@ public class WithdrawEventListener {
     @Autowired
     private TransactionManageService transactionManageService;
 
-    private static final String callbackUrl = ApplicationConfig.callBackHost + "/admin/financeManage/callbackWallet";
+    private static final String callbackUrl = ApplicationConfig.callBackHost + "/admin/finance/callbackWallet";
 
     @EventListener
     public void onApplicationEvent(WithdrawEvent event) {
@@ -49,12 +49,12 @@ public class WithdrawEventListener {
     }
 
     private void processCallback(WithdrawEvent event) throws Exception {
-        log.info("Start process http request in ECC server.");
+        log.info("Start process http request in OWC server.");
         log.info("Request body info:{}",JSON.toJSONString(event));
 
         ResponseEntity responseEntity =  HttpUtils.postForEntity(callbackUrl,parserMap(event.getCallbackResponse()));
 
-        log.info("Process ECC server finish. Response info:[{}]",JSON.toJSONString(responseEntity));
+        log.info("Process OWC server finish. Response info:[{}]",JSON.toJSONString(responseEntity));
     }
 
     private Map parserMap(WithdrawCallback request) throws Exception {

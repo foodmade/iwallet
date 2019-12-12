@@ -1,6 +1,7 @@
 package com.qkl.wallet.service;
 
 import com.qkl.wallet.vo.ResultBean;
+import com.qkl.wallet.vo.in.WithdrawParams;
 import com.qkl.wallet.vo.in.WithdrawRequest;
 import com.qkl.wallet.vo.out.BalanceResponse;
 import com.qkl.wallet.vo.out.CreateWalletResponse;
@@ -23,10 +24,10 @@ public interface WalletService {
 
     /**
      * 转账
-     * @param withdrawRequest 转账参数
+     * @param params 转账参数
      * @return {@link com.qkl.wallet.vo.out.WithdrawResponse}
      */
-    WithdrawResponse withdraw(List<WithdrawRequest> withdrawRequest) throws IOException;
+    WithdrawResponse withdraw(WithdrawParams params) throws IOException;
 
     /**
      * 获取代币余额
@@ -56,4 +57,25 @@ public interface WalletService {
      * 获取最新一笔交易的gas费用
      */
     GasResponse getEthGas();
+
+    /**
+     * 获取对应币种下的平台钱包余额
+     */
+    BalanceResponse getPlatformBalance(@NonNull String chain,@NonNull String tokenName);
+
+    /**
+     * 通过代币名称获取对应的平台钱包地址
+     * @param tokenName 代币名称
+     * @param chain 链类型 ETH/BTC
+     * @return 钱包地址
+     */
+    String parserPlatformAddress(String chain,String tokenName);
+
+    /**
+     * 通过代币名称获取对应的平台钱包地址
+     * @param tokenName  代币名称
+     * @return 钱包地址
+     */
+    String parserPlatformAddress(String tokenName);
+
 }

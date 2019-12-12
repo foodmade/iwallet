@@ -12,4 +12,8 @@ public class UtilsService {
         }
         return new BigDecimal(integer).divide(new BigDecimal(sbf.toString()), 18, BigDecimal.ROUND_DOWN).toPlainString();
     }
+
+    public static boolean isEth(String tokenName){
+        return "ETH".equals(tokenName);
+    }
 }
