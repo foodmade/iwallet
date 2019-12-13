@@ -87,7 +87,7 @@ public class WalletServiceImpl implements WalletService {
         }else{
             tokenTransfer(params);
         }
-        return new WithdrawResponse("");
+        return new WithdrawResponse("1111");
     }
 
     private void mainChainTransfer(WithdrawParams params) {

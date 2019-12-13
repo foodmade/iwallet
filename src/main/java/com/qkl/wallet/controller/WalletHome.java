@@ -54,8 +54,8 @@ public class WalletHome {
      * 提币
      */
     @PostMapping(value = "withdraw")
-    public WithdrawResponse withdraw(@RequestBody WithdrawParams params) throws IOException {
-        return walletService.withdraw(params);
+    public ResultBean<WithdrawResponse> withdraw(@RequestBody WithdrawParams params) throws IOException {
+        return ResultBean.success(walletService.withdraw(params));
     }
 
     /**

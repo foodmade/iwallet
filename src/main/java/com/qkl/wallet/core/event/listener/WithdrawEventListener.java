@@ -52,7 +52,7 @@ public class WithdrawEventListener {
         log.info("Start process http request in OWC server.");
         log.info("Request body info:{}",JSON.toJSONString(event));
 
-        ResponseEntity responseEntity =  HttpUtils.postForEntity(callbackUrl,parserMap(event.getCallbackResponse()));
+        ResponseEntity responseEntity =  HttpUtils.postForEntity(callbackUrl,event.getCallbackResponse());
 
         log.info("Process OWC server finish. Response info:[{}]",JSON.toJSONString(responseEntity));
     }
