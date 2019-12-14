@@ -65,6 +65,10 @@ public class WithdrawCallback {
      * 代币名称
      */
     private String tokenName;
+    /**
+     * 区块确认数
+     */
+    private Long confirmBlockNumber;
 
     public WithdrawCallback(String recepient, CallbackTypeEnum callbackTypeEnum) {
         this.recepient = recepient;

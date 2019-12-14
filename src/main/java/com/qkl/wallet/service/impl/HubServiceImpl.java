@@ -6,6 +6,7 @@ import com.qkl.wallet.common.enumeration.CallbackTypeEnum;
 import com.qkl.wallet.common.enumeration.ExceptionEnum;
 import com.qkl.wallet.common.exception.BadRequestException;
 import com.qkl.wallet.core.transfer.OrderManage;
+import com.qkl.wallet.domain.ConfirmListenerEntity;
 import com.qkl.wallet.domain.TransactionListenerEvent;
 import com.qkl.wallet.service.HubService;
 import com.qkl.wallet.vo.out.WithdrawCallback;
@@ -15,8 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-
-import static com.qkl.wallet.common.UtilsService._Get_Redis;
 
 /**
  * @Author Jackies
@@ -48,6 +47,18 @@ public class HubServiceImpl implements HubService {
         callback.set_id(event.getId());
         callback.setTrace(OrderManage.getTraceId(event.getTransactionHash()));
         callback.setTokenName(event.getTokenName());
+        eventService.addSuccessEvent(callback);
+        return true;
+    }
+
+    @Override
+    public Boolean confirmBlockNumEvent(ConfirmListenerEntity confirmListenerEntity) {
+        log.info("Number of confirmation blocks received from the order listener");
+        log.info("Detail info:{}",JSON.toJSONString(confirmListenerEntity));
+
+        WithdrawCallback callback = new WithdrawCallback(CallbackTypeEnum.CONFIRM_TYPE);
+        callback.setTxnHash(confirmListenerEntity.getTransactionHash());
+        callback.setConfirmBlockNumber(confirmListenerEntity.getConfirmNumber());
         eventService.addSuccessEvent(callback);
         return true;
     }

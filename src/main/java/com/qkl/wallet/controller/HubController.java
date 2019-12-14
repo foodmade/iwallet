@@ -1,5 +1,6 @@
 package com.qkl.wallet.controller;
 
+import com.qkl.wallet.domain.ConfirmListenerEntity;
 import com.qkl.wallet.domain.TransactionListenerEvent;
 import com.qkl.wallet.service.HubService;
 import com.qkl.wallet.vo.ResultBean;
@@ -27,8 +28,8 @@ public class HubController {
     }
 
     @PostMapping(value = "confirmBlockNumEvent")
-    public ResultBean<Boolean> confirmBlockNumEvent(){
-        return null;
+    public ResultBean<Boolean> confirmBlockNumEvent(@RequestBody ConfirmListenerEntity confirmListenerEntity){
+        return ResultBean.success(hubService.confirmBlockNumEvent(confirmListenerEntity));
     }
 
 }

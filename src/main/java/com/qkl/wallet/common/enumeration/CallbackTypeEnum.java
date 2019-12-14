@@ -2,7 +2,8 @@ package com.qkl.wallet.common.enumeration;
 
 public enum CallbackTypeEnum {
     WITHDRAW_TYPE("W","提币回调"),
-    RECHARGE_TYPE("D","充值回调");
+    RECHARGE_TYPE("D","充值回调"),
+    CONFIRM_TYPE("C","区块确认");
 
     private String type;
 
