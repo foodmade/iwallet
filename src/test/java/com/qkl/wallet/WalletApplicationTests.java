@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.qkl.wallet.common.Const;
 import com.qkl.wallet.common.HttpUtils;
+import com.qkl.wallet.common.walletUtil.LightWallet;
 import com.qkl.wallet.contract.Token;
 import com.qkl.wallet.service.WalletService;
 import org.junit.Test;
@@ -13,10 +14,18 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
+import org.web3j.abi.EventEncoder;
+import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.TypeReference;
+import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.*;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.Request;
+import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
@@ -25,6 +34,7 @@ import org.web3j.protocol.exceptions.TransactionException;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.protocol.websocket.WebSocketClient;
 import org.web3j.protocol.websocket.WebSocketService;
+import org.web3j.tx.ChainId;
 import org.web3j.tx.Contract;
 import org.web3j.tx.Transfer;
 import org.web3j.tx.gas.DefaultGasProvider;
@@ -35,11 +45,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -50,6 +56,8 @@ public class WalletApplicationTests {
 
     @Autowired
     private WalletService walletService;
+    @Autowired
+    private Web3j web3j;
 
     @Test
     public void contextLoads() {
@@ -96,6 +104,45 @@ public class WalletApplicationTests {
         String transactionHash = ethSendTransaction.getTransactionHash();
         //获得到transactionHash后就可以到以太坊的网站上查询这笔交易的状态了
         System.out.println(transactionHash);
+
+    }
+
+    @Test
+    public void tokenTransfer() throws Exception {
+        signContractTransaction();
+    }
+
+    private void signContractTransaction() throws Exception {
+
+        BigInteger GAS_PRICE = BigInteger.valueOf(22_000_000_000L);
+        BigInteger GAS_LIMIT = BigInteger.valueOf(4_300_000);
+
+
+
+//        String encodedFunction = EventEncoder.encode(Token.TRANSFER_EVENT);
+        String contractAddress = "0xa36B054aFA6D95EF78841a0906b18d4d9cfEb119";
+        String toAddress = "0xdF67ab61A941f4001a95255c57f586e7f99421f9";
+        BigInteger amount = Const._UNIT.multiply(new BigInteger("121"));
+
+        Function function = new Function(
+                "transfer",
+                Arrays.asList(new Address(toAddress), new Uint256(amount)),
+                Collections.<TypeReference<?>>emptyList());
+
+        String encodedFunction = FunctionEncoder.encode(function);
+        BigInteger nonce = LightWallet.getNonce("0x493fb23d930458a84b49B5cA53D961e039868A58");
+
+        RawTransaction rawTransaction = RawTransaction.createTransaction(nonce,
+                GAS_PRICE,
+                GAS_LIMIT,
+                contractAddress, encodedFunction);
+        //签名Transaction，这里要对交易做签名
+        byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, LightWallet.buildDefaultCredentials());
+        String hexValue = Numeric.toHexString(signMessage);
+        //发送交易
+        EthSendTransaction ethSendTransaction = web3j.ethSendRawTransaction(hexValue).sendAsync().get();
+
+        System.out.println(JSON.toJSONString(ethSendTransaction));
 
     }
 

@@ -69,13 +69,21 @@ public interface WalletService {
      * @param chain 链类型 ETH/BTC
      * @return 钱包地址
      */
-    String parserPlatformAddress(String chain,String tokenName);
+    String foundPlatformAddress(String chain, String tokenName);
 
     /**
      * 通过代币名称获取对应的平台钱包地址
      * @param tokenName  代币名称
      * @return 钱包地址
      */
-    String parserPlatformAddress(String tokenName);
+    String foundPlatformAddress(String tokenName);
+
+    /**
+     * 通过代币名称获取对应的合约地址
+     * @param tokenName 代币名称
+     * @return 智能合约地址
+     */
+    String foundPlatformContractAddress(String tokenName);
+
 
 }

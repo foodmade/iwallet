@@ -1,5 +1,6 @@
 package com.qkl.wallet.common.walletUtil;
 
+import com.qkl.wallet.common.SpringContext;
 import com.qkl.wallet.common.walletUtil.outModel.WalletAddressInfo;
 import com.qkl.wallet.config.ApplicationConfig;
 import com.qkl.wallet.contract.Token;
@@ -7,12 +8,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
 import org.web3j.tx.Contract;
 import org.web3j.utils.Numeric;
 
 import java.io.File;
+import java.math.BigInteger;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.util.concurrent.ExecutionException;
 
 /**
  * @Author xiaom
@@ -81,6 +86,21 @@ public class LightWallet {
 
     public static Credentials buildCredentials(String secretKey){
         return Credentials.create(secretKey);
+    }
+
+    /**
+     * 获取nonce，交易笔数
+     *
+     * @param from
+     * @return
+     * @throws ExecutionException
+     * @throws InterruptedException
+     */
+    public static BigInteger getNonce(String from) throws ExecutionException, InterruptedException {
+        EthGetTransactionCount transactionCount = SpringContext.getBean(Web3j.class).ethGetTransactionCount(from, DefaultBlockParameterName.LATEST).sendAsync().get();
+        BigInteger nonce = transactionCount.getTransactionCount();
+        log.info("transfer nonce :{}" , nonce);
+        return nonce;
     }
 
 }

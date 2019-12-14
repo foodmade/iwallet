@@ -532,6 +532,49 @@ public class RedisUtil {
     }
 
     /**
+     * 添加元素到队列中 (批量)
+     * @param key
+     * @param values
+     * @return
+     */
+    public <T> boolean lpushAll(String key,List<T> values){
+        try {
+            redisTemplate.opsForList().leftPushAll(key,values);
+            return true;
+        }catch (Exception e){
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * 添加元素到队列中 (单个)
+     * @param key
+     * @param value
+     */
+    public <T> boolean lpushOne(String key,T value){
+        try {
+            redisTemplate.opsForList().leftPush(key,value);
+            return true;
+        }catch (Exception e){
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * 从队列中获取一个元素
+     */
+    public Object lpopOne(String key){
+        try {
+            return redisTemplate.opsForList().leftPop(key);
+        }catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
      * 根据索引修改list中的某条数据
      * @param key 键
      * @param index 索引

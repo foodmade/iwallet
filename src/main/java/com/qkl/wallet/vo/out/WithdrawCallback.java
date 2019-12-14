@@ -48,7 +48,7 @@ public class WithdrawCallback {
     /**
      * 交易费（如果coinType是 ETH 或 BTC）
      */
-    private String gas = "0.0";
+    private String gas = "0";
     /**
      * 跟踪ID
      */
@@ -61,6 +61,10 @@ public class WithdrawCallback {
      * 状态码
      */
     private Integer code = ExceptionEnum.SUCCESS.getCode();
+    /**
+     * 代币名称
+     */
+    private String tokenName;
 
     public WithdrawCallback(String recepient, CallbackTypeEnum callbackTypeEnum) {
         this.recepient = recepient;

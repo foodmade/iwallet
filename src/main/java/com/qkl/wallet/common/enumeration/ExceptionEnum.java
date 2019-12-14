@@ -8,7 +8,8 @@ public enum ExceptionEnum {
     PARAMS_MISS_ERR(10006,"Params missing","参数缺失"),
     BAD_REQUEST_ERR(10007,"Bad request.","请求失败"),
     INVALID_TOKEN_ERR(10008,"Undefined token type","未定义的代币类型"),
-    NOT_SUPPORT_ERR(10009,"This type is not currently supported","暂时不支持此代币类型");
+    NOT_SUPPORT_ERR(10009,"This type is not currently supported","暂时不支持此代币类型"),
+    INVOKE_METHOD_ERR(10010,"Reflection execution function error","反射执行合约Load函数异常");
 
     private Integer code;
 

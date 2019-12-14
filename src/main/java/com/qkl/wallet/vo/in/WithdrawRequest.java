@@ -1,6 +1,7 @@
 package com.qkl.wallet.vo.in;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -12,6 +13,7 @@ import java.math.BigDecimal;
  * @Description <>
  **/
 @Data
+@EqualsAndHashCode
 public class WithdrawRequest implements Serializable {
 
     /**
@@ -26,4 +28,10 @@ public class WithdrawRequest implements Serializable {
      * 追踪ID
      */
     private String trace;
+
+    public WithdrawRequest(String address, BigDecimal amount, String trace) {
+        this.address = address;
+        this.amount = amount;
+        this.trace = trace;
+    }
 }

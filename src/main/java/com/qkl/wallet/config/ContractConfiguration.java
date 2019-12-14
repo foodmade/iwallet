@@ -4,6 +4,7 @@ import com.qkl.wallet.common.SpringContext;
 import com.qkl.wallet.common.tools.ReflectionUtils;
 import com.qkl.wallet.common.walletUtil.LightWallet;
 import com.qkl.wallet.core.ContractMapper;
+import com.qkl.wallet.core.transfer.work.WorkFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -13,8 +14,10 @@ import org.web3j.tx.gas.ContractGasProvider;
 import org.web3j.tx.gas.DefaultGasProvider;
 
 import javax.annotation.PostConstruct;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 
 /**
  * @Author xiaom
@@ -32,10 +35,33 @@ public class ContractConfiguration {
     private TokenConfigs tokenConfigs;
 
     @PostConstruct
-    public void loadContractObject(){
+    public void initializationContractConfiguration(){
+        //通过Token.json配置文件,反解析所有代币类型,并生成合约加载器.
+        if(!loadContractObject()){
+            return;
+        }
+        //创建已验证合法的合约加载器工作线程.
+        createContractWorkThread();
+    }
+
+    private void createContractWorkThread() {
+
+        if(ContractMapper.contractLoaderSize() == 0){
+            return;
+        }
+
+        ContractMapper
+                .contractTypeList()
+                .forEach(name -> WorkFactory
+                                    .build()
+                                    .buildThreadWork(name).ifPresent(Thread::start));
+    }
+
+
+    public boolean loadContractObject(){
         if(tokenConfigs == null){
             log.error("TokenConfigs example is null. Not executed loadContractObject method.");
-            return;
+            return false;
         }
 
         //Init web3j
@@ -68,12 +94,16 @@ public class ContractConfiguration {
                 moduleLog("Structure contract loader. tokenName:[{}],class loader path:[{}] ",childToken.getToken_name(),childToken.getContract_class_path());
                 try {
                     //Load contract.
-                    Object contractExample = Class.forName(childToken.getContract_class_path())
+                    Method method = Class.forName(childToken.getContract_class_path())
                             .getMethod("load"
                                     ,String.class
-                                    ,Web3j.class, Credentials.class, ContractGasProvider.class)
-                            .invoke(null,childToken.getContract_address(),SpringContext.getBean(Web3j.class),
-                                    LightWallet.buildCredentials(childToken.getSecretKey()),new DefaultGasProvider());
+                                    ,Web3j.class, Credentials.class, ContractGasProvider.class);
+
+                    Object[] params = {childToken.getContract_address(),SpringContext.getBean(Web3j.class),
+                            LightWallet.buildCredentials(childToken.getSecretKey()),new DefaultGasProvider()};
+
+                    Object contractExample = method.invoke(null,params);
+
                     //Valid token .
                     Object valid = ReflectionUtils.getAccessibleMethod(contractExample,"isValid").invoke(contractExample);
 
@@ -86,7 +116,7 @@ public class ContractConfiguration {
                         continue;
                     }
                     moduleLog("Contract load successful. TokenName:[{}] address:[{}]",childToken.getToken_name(),childToken.getContract_address());
-                    ContractMapper.put(childToken.getToken_name(),contractExample);
+                    ContractMapper.putInvokeExample(childToken.getToken_name(),method,params);
                     moduleLog("-------------------------------------------------------------------------");
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -94,6 +124,7 @@ public class ContractConfiguration {
             }
         });
         moduleLog("Install all token contract example finish. Mapper size:[{}]",ContractMapper.contractLoaderSize());
+        return true;
     }
 
     private void moduleLog(String message,Object...vals){

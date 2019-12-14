@@ -16,4 +16,8 @@ public class UtilsService {
     public static boolean isEth(String tokenName){
         return "ETH".equals(tokenName);
     }
+
+    public static RedisUtil _Get_Redis(){
+        return SpringContext.getBean(RedisUtil.class);
+    }
 }

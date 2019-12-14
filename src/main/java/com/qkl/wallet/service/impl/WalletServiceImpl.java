@@ -2,7 +2,6 @@ package com.qkl.wallet.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.qkl.wallet.common.Const;
-import com.qkl.wallet.common.UtilsService;
 import com.qkl.wallet.common.enumeration.ChainEnum;
 import com.qkl.wallet.common.enumeration.ExceptionEnum;
 import com.qkl.wallet.common.exception.BadRequestException;
@@ -13,6 +12,8 @@ import com.qkl.wallet.config.TokenConfigs;
 import com.qkl.wallet.contract.IToken;
 import com.qkl.wallet.contract.Token;
 import com.qkl.wallet.core.ContractMapper;
+import com.qkl.wallet.core.transfer.OrderManage;
+import com.qkl.wallet.core.transfer.OrderModel;
 import com.qkl.wallet.service.TransactionManageService;
 import com.qkl.wallet.service.WalletService;
 import com.qkl.wallet.vo.in.WithdrawParams;
@@ -39,10 +40,8 @@ import org.web3j.utils.Numeric;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -57,10 +56,6 @@ public class WalletServiceImpl implements WalletService {
 
     @Autowired
     private Web3j web3j;
-    @Autowired
-    private TransactionManageService transactionManageService;
-    @Autowired
-    private EventService eventService;
     @Autowired
     private TokenConfigs tokenConfigs;
 
@@ -80,78 +75,43 @@ public class WalletServiceImpl implements WalletService {
     @Override
     public WithdrawResponse withdraw(WithdrawParams params) throws IOException {
 
+        if(!validOrderRequest(params)){
+            log.info("The order does not meet the conditions, and all the orders have been rejected");
+            throw new BadRequestException("存在不满足条件的订单,请检查");
+        }
+
         //判断是不是BTC或者ETH主链之间的交易
         if(params.getTokenName() == null){
             //如果子链参数为空,则说明这是BTC或者ETH之间的交易,分发给主链交易流程
-            mainChainTransfer(params);
+            OrderManage.addBatchChainOrder(params.getRequest(),params.getTokenName());
         }else{
-            tokenTransfer(params);
+            OrderManage.addTokenOrder(params);
         }
-        return new WithdrawResponse("1111");
+        return new WithdrawResponse("");
     }
 
-    private void mainChainTransfer(WithdrawParams params) {
-        if(UtilsService.isEth(params.getChain())){
 
-        }
-    }
-
-    private void tokenTransfer(WithdrawParams params) {
-        //Load contract client.
-        IToken myToken;
-        try {
-            myToken = ContractMapper.get(params.getTokenName());
-        } catch (Exception e) {
-            throw new BadRequestException(ExceptionEnum.INVALID_TOKEN_ERR);
-        }
-
-        String address = parserPlatformAddress(params.getTokenName());
-        if(address == null){
-            throw new BadRequestException(ExceptionEnum.INVALID_TOKEN_ERR);
-        }
-
+    private boolean validOrderRequest(WithdrawParams params) {
         for (WithdrawRequest withdrawRequest : params.getRequest()) {
-            //Cache this order basis info.
-            transactionManageService.cacheTransactionOrder(withdrawRequest);
-
-            log.info("Start submitting a transfer request.");
-
-            CompletableFuture<TransactionReceipt> future = myToken
-                    .transfer(withdrawRequest.getAddress() ,withdrawRequest.getAmount().toBigInteger().multiply(Const._UNIT))
-                    .sendAsync();
-            log.info("Transaction request submitted. Start listening thread.");
-
-            new Thread(() -> {
-                try {
-                    TransactionReceipt receipt = future.get();
-                    log.info("The transaction has been confirmed. >>>> :[{}]", JSON.toJSONString(receipt));
-                    eventService.addSuccessEvent(receipt, withdrawRequest);
-                } catch (InterruptedException | ExecutionException e) {
-                    e.printStackTrace();
-                }
-            }).start();
-            log.info("Transfer successful. >>> Waiting for blockchain confirmation transaction.");
-        }
-    }
-
-    private List<WithdrawRequest> validOrderRequest(List<WithdrawRequest> withdrawRequests) {
-
-        List<WithdrawRequest> validList = new ArrayList<>();
-
-        for (WithdrawRequest withdrawRequest : withdrawRequests) {
             try {
-                Assert.notNull(withdrawRequest.getAddress(),"Transfer to address must not be null.");
-                Assert.notNull(withdrawRequest.getAmount(),"Transfer amount must not be null.");
-                Assert.isTrue(withdrawRequest.getAmount().compareTo(BigDecimal.ZERO) > 0,"Negative or zero amount are not allowed");
-                validList.add(withdrawRequest);
+                Assert.notNull(withdrawRequest.getAddress(), "Transfer to address must not be null.");
+                Assert.notNull(withdrawRequest.getAmount(), "Transfer amount must not be null.");
+                Assert.isTrue(withdrawRequest.getAmount().compareTo(BigDecimal.ZERO) > 0, "Negative or zero amount are not allowed");
             } catch (Exception e) {
                 log.error(e.getMessage());
-                log.error("Throw withdraw order info:[{}]",JSON.toJSONString(withdrawRequest));
-                eventService.addErrEvent(withdrawRequest,e.getMessage());
+                log.error("Throw withdraw order info:[{}]", JSON.toJSONString(withdrawRequest));
+                return false;
             }
         }
-        return validList;
 
+
+        //获取平台钱包地址
+        String formAddress = foundPlatformAddress(params.getTokenName(),params.getChain());
+        if(formAddress == null){
+            throw new BadRequestException(ExceptionEnum.INVALID_TOKEN_ERR);
+        }
+
+        return true;
     }
 
     @Override
@@ -227,7 +187,7 @@ public class WalletServiceImpl implements WalletService {
         if(!optionalChainEnum.get().isValid()) throw new BadRequestException(ExceptionEnum.NOT_SUPPORT_ERR);
 
         //Get token platform wallet address.
-        String address = parserPlatformAddress(tokenName,chain);
+        String address = foundPlatformAddress(tokenName,chain);
         if(address == null) throw new BadRequestException(ExceptionEnum.INVALID_TOKEN_ERR);
 
         //If current request chain == tokenName. And is ETH.
@@ -238,7 +198,7 @@ public class WalletServiceImpl implements WalletService {
         }
     }
 
-    public String parserPlatformAddress(String tokenName,String chain) {
+    public String foundPlatformAddress(String tokenName, String chain) {
 
         boolean isChain = tokenName.equals(chain);
 
@@ -261,7 +221,7 @@ public class WalletServiceImpl implements WalletService {
         return null;
     }
 
-    public String parserPlatformAddress(String tokenName){
+    public String foundPlatformAddress(String tokenName){
         List<TokenConfigs.TokenConfig> configs = tokenConfigs.getTokenConfigs();
 
         for (TokenConfigs.TokenConfig config : configs) {
@@ -272,6 +232,21 @@ public class WalletServiceImpl implements WalletService {
             for (TokenConfigs.TokenConfig.ChildToken childToken : childTokens) {
                 if(childToken.getToken_name().equals(tokenName)){
                     return childToken.getAddress();
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public String foundPlatformContractAddress(String tokenName) {
+
+        List<TokenConfigs.TokenConfig> configs = tokenConfigs.getTokenConfigs();
+        for (TokenConfigs.TokenConfig config : configs) {
+            List<TokenConfigs.TokenConfig.ChildToken> childTokens = config.getChild_tokens();
+            for (TokenConfigs.TokenConfig.ChildToken childToken : childTokens) {
+                if(childToken.getToken_name().equals(tokenName)){
+                    return childToken.getContract_address();
                 }
             }
         }
