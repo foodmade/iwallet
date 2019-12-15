@@ -8,6 +8,7 @@ import com.qkl.wallet.config.TokenConfigs;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.Web3ClientVersion;
@@ -27,6 +28,7 @@ public class BeanStruct {
      * @return
      */
     @Bean
+    @Order(1)
     public Web3j initWeb3jClient() {
         Web3j web3j = Web3j.build(new HttpServiceEx(ApplicationConfig.blockHost));
         Web3ClientVersion web3ClientVersion;

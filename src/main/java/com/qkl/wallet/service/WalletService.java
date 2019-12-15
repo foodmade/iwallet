@@ -8,6 +8,7 @@ import com.qkl.wallet.vo.out.CreateWalletResponse;
 import com.qkl.wallet.vo.out.GasResponse;
 import com.qkl.wallet.vo.out.WithdrawResponse;
 import org.springframework.lang.NonNull;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -54,6 +55,15 @@ public interface WalletService {
     Boolean transferEth(String toAddress, BigDecimal amount);
 
     /**
+     * 2个钱包间的互转
+     * @param fromAddress   打款地址
+     * @param toAddress     收款地址
+     * @param amount        金额
+     * @param secretKey     打款钱包秘钥
+     */
+    TransactionReceipt transferEth(String fromAddress, String toAddress, BigDecimal amount, String secretKey);
+
+    /**
      * 获取最新一笔交易的gas费用
      */
     GasResponse getEthGas();
@@ -64,7 +74,7 @@ public interface WalletService {
     BalanceResponse getPlatformBalance(@NonNull String chain,@NonNull String tokenName);
 
     /**
-     * 通过代币名称获取对应的平台钱包地址
+     * 通过代币名称获取对应的平台钱包地址 (代币)
      * @param tokenName 代币名称
      * @param chain 链类型 ETH/BTC
      * @return 钱包地址
@@ -72,7 +82,7 @@ public interface WalletService {
     String foundPlatformAddress(String chain, String tokenName);
 
     /**
-     * 通过代币名称获取对应的平台钱包地址
+     * 通过代币名称获取对应的平台钱包地址 (主币)
      * @param tokenName  代币名称
      * @return 钱包地址
      */
@@ -84,6 +94,11 @@ public interface WalletService {
      * @return 智能合约地址
      */
     String foundPlatformContractAddress(String tokenName);
+
+    /**
+     * 通过代币名称获取对应的钱包秘钥
+     */
+    String foundTokenSecretKey(String chain);
 
 
 }

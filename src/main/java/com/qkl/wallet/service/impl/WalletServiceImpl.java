@@ -83,7 +83,7 @@ public class WalletServiceImpl implements WalletService {
         //判断是不是BTC或者ETH主链之间的交易
         if(params.getTokenName() == null){
             //如果子链参数为空,则说明这是BTC或者ETH之间的交易,分发给主链交易流程
-            OrderManage.addBatchChainOrder(params.getRequest(),params.getTokenName());
+            OrderManage.addChainOrder(params);
         }else{
             OrderManage.addTokenOrder(params);
         }
@@ -145,26 +145,30 @@ public class WalletServiceImpl implements WalletService {
 
     @Override
     public Boolean transferEth(String toAddress, BigDecimal amount) {
+        transferEth(ApplicationConfig.walletETHAddress,toAddress,amount,ApplicationConfig.secretKey);
+        return true;
+    }
 
+    @Override
+    public TransactionReceipt transferEth(String fromAddress, String toAddress, BigDecimal amount, String secretKey) {
         //Valid system wallet account balance is it enough.
-        BigInteger systemWalletBalance = getETHBalance(ApplicationConfig.walletETHAddress).getBalance();
+        BigInteger systemWalletBalance = getETHBalance(fromAddress).getBalance();
 
         Assert.isTrue(amount.compareTo(new BigDecimal(systemWalletBalance)) < 0,"Insufficient available balance in system account");
 
-        Credentials credentials = LightWallet.buildDefaultCredentials();
-
+        Credentials credentials = LightWallet.buildCredentials(secretKey);
         try {
             TransactionReceipt transactionReceipt = Transfer.sendFunds(
                     web3j, credentials, toAddress,
                     amount, Convert.Unit.WEI).send();
             log.info("Eth transfer successful. transactionReceipt:{}",JSON.toJSONString(transactionReceipt));
+            return transactionReceipt;
         } catch (Exception e) {
             log.error("Eth wallet transfer throw error. >>> {}",e.getMessage());
             log.error("Basis info params. toAddress:[{}] amount:[{}]",toAddress,amount);
             e.printStackTrace();
             throw new BadRequestException(ExceptionEnum.BAD_REQUEST_ERR);
         }
-        return true;
     }
 
     @Override
@@ -200,6 +204,10 @@ public class WalletServiceImpl implements WalletService {
 
     public String foundPlatformAddress(String tokenName, String chain) {
 
+        if(tokenName == null){
+            return foundPlatformAddress(chain);
+        }
+
         boolean isChain = tokenName.equals(chain);
 
         List<TokenConfigs.TokenConfig> configs = tokenConfigs.getTokenConfigs();
@@ -221,17 +229,34 @@ public class WalletServiceImpl implements WalletService {
         return null;
     }
 
-    public String foundPlatformAddress(String tokenName){
+    public String foundPlatformAddress(String keyName){
         List<TokenConfigs.TokenConfig> configs = tokenConfigs.getTokenConfigs();
 
         for (TokenConfigs.TokenConfig config : configs) {
-            if(config.getToken_type().equals(tokenName)){
+            if(config.getToken_type().equals(keyName)){
                 return config.getAddress();
             }
             List<TokenConfigs.TokenConfig.ChildToken> childTokens = config.getChild_tokens();
             for (TokenConfigs.TokenConfig.ChildToken childToken : childTokens) {
-                if(childToken.getToken_name().equals(tokenName)){
+                if(childToken.getToken_name().equals(keyName)){
                     return childToken.getAddress();
+                }
+            }
+        }
+        return null;
+    }
+
+    public String foundTokenSecretKey(String chain){
+        List<TokenConfigs.TokenConfig> configs = tokenConfigs.getTokenConfigs();
+
+        for (TokenConfigs.TokenConfig config : configs) {
+            if(config.getToken_type().equals(chain)){
+                return config.getSecretKey();
+            }
+            List<TokenConfigs.TokenConfig.ChildToken> childTokens = config.getChild_tokens();
+            for (TokenConfigs.TokenConfig.ChildToken childToken : childTokens) {
+                if(childToken.getToken_name().equals(chain)){
+                    return childToken.getSecretKey();
                 }
             }
         }

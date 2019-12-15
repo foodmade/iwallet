@@ -1,32 +1,44 @@
 package com.qkl.wallet.core.transfer.work;
 
 import com.qkl.wallet.common.SpringContext;
-import com.qkl.wallet.core.event.TransferEvent;
+import com.qkl.wallet.common.enumeration.TokenEventEnum;
+import com.qkl.wallet.core.event.TokenTransferEvent;
 import com.qkl.wallet.core.transfer.OrderManage;
 import com.qkl.wallet.core.transfer.OrderModel;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEvent;
+
+import java.lang.reflect.Constructor;
 
 /**
  * @Author Jackies
- * @Date 2019/12/14 13:49
+ * @Date 2019/12/15 17:21
  * @Description TODO://
  **/
 @Slf4j
-public class WorkThread extends Thread{
+public class WorkThread extends Thread {
 
-    /**
-     * Token name.
-     */
-    private String tokenName;
+    protected String tokenName;
 
-    private boolean isRunning = false;
+    protected TokenEventEnum event;
 
-    public WorkThread(String tokenName) {
+    protected boolean isRunning = false;
+
+    public WorkThread(String tokenName, TokenEventEnum eventEnum) {
         this.tokenName = tokenName;
+        this.event = eventEnum;
     }
 
     public OrderModel onProcess(){
         return OrderManage.lpopOrderForEntity(tokenName, OrderModel.class);
+    }
+
+    public void sleep(){
+        try {
+            sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -45,9 +57,25 @@ public class WorkThread extends Thread{
             }
             pause();
             log.info("Accept order manage withdraw order. createTime:[{}], retry:[{}] trace:[{}]",order.getTime(),order.getRetry(),order.getWithdraw().getTrace());
-            SpringContext.getApplicationContext().publishEvent(new TransferEvent(this,order));
+            ApplicationEvent event = installEvent(order);
+            if(event == null){
+                log.error("newInstall event model failed. tokenName:[{}]",tokenName);
+                sleep();
+                continue;
+            }
+            SpringContext.getApplicationContext().publishEvent(event);
             sleep();
         }
+    }
+
+    private ApplicationEvent installEvent(OrderModel order){
+        try {
+            Constructor constructor = event.getaClass().getConstructor(Object.class,OrderModel.class);
+            return (ApplicationEvent)constructor.newInstance(this,order);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public void pause(){
@@ -56,13 +84,5 @@ public class WorkThread extends Thread{
 
     public void play(){
         this.isRunning = false;
-    }
-
-    private void sleep(){
-        try {
-            sleep(100);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 }

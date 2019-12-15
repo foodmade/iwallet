@@ -1,5 +1,7 @@
 package com.qkl.wallet.core.transfer.work;
 
+import com.qkl.wallet.common.enumeration.TokenEventEnum;
+
 import java.util.Optional;
 
 /**
@@ -13,8 +15,13 @@ public class WorkFactory {
         return new WorkFactory();
     }
 
-    public Optional<Thread> buildThreadWork(String tokenName){
-        return Optional.of(new WorkThread(tokenName));
+    /**
+     * 构建代币类型的工作线程
+     * @param tokenName 代币名称
+     * @param eventEnum 线程事件枚举
+     */
+    public Optional<Thread> buildTokenThreadWork(String tokenName, TokenEventEnum eventEnum){
+        return Optional.of(new WorkThread(tokenName,eventEnum));
     }
 
 }

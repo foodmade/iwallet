@@ -46,8 +46,8 @@ public class WalletHome {
      * 创建钱包
      */
     @PostMapping(value = "getWallet")
-    public CreateWalletResponse createWallet(){
-        return walletService.createWallet();
+    public ResultBean<CreateWalletResponse> createWallet(){
+        return ResultBean.success(walletService.createWallet());
     }
 
     /**

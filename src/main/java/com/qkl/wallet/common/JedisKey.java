@@ -42,6 +42,10 @@ public class JedisKey {
         return buildKey(_CACHE_ORDER_TOKEN_QUEUE_KEY,key);
     }
 
+    /**
+     * Withdraw order
+     * @return
+     */
     public static String buildWithdrawTxHashKey(){
         return buildKey(_WITHDRAW_TX_HASH_QUEUE);
 

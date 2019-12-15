@@ -1,12 +1,14 @@
 package com.qkl.wallet.config;
 
 import com.qkl.wallet.common.SpringContext;
+import com.qkl.wallet.common.enumeration.TokenEventEnum;
 import com.qkl.wallet.common.tools.ReflectionUtils;
 import com.qkl.wallet.common.walletUtil.LightWallet;
 import com.qkl.wallet.core.ContractMapper;
 import com.qkl.wallet.core.transfer.work.WorkFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
@@ -17,7 +19,6 @@ import javax.annotation.PostConstruct;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 
 /**
  * @Author xiaom
@@ -25,6 +26,7 @@ import java.util.function.Function;
  * @Version 1.0.0
  * @Description <>
  **/
+@Order(10)
 @Component
 @Slf4j
 public class ContractConfiguration {
@@ -52,9 +54,10 @@ public class ContractConfiguration {
 
         ContractMapper
                 .contractTypeList()
-                .forEach(name -> WorkFactory
+                .forEach(tokenName -> WorkFactory
                                     .build()
-                                    .buildThreadWork(name).ifPresent(Thread::start));
+                                    .buildTokenThreadWork(tokenName, TokenEventEnum.find(tokenName).get())
+                                    .ifPresent(Thread::start));
     }
 
 
@@ -75,6 +78,10 @@ public class ContractConfiguration {
                 moduleLog("Current contract config. contract type:[{}] valid:[false]",tokenConfig.getToken_type());
                 return;
             }
+
+            //If it is the main chain, no contract address is required
+            ContractMapper.putInvokeExample(tokenConfig.getToken_type(),null,null);
+
             List<TokenConfigs.TokenConfig.ChildToken> childTokens = tokenConfig.getChild_tokens();
             if(childTokens == null || childTokens.isEmpty()){
                 moduleLog("Current contract config. Child token config empty. contract type:[{}]",tokenConfig.getToken_type());

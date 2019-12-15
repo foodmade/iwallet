@@ -1,6 +1,7 @@
 package com.qkl.wallet.controller;
 
 import com.qkl.wallet.domain.ConfirmListenerEntity;
+import com.qkl.wallet.domain.EthTransactionReq;
 import com.qkl.wallet.domain.TransactionListenerEvent;
 import com.qkl.wallet.service.HubService;
 import com.qkl.wallet.vo.ResultBean;
@@ -22,14 +23,28 @@ public class HubController {
     @Autowired
     private HubService hubService;
 
+    /**
+     * 监听合约交易事件
+     */
     @PostMapping(value = "/submitTransferEvent")
     public ResultBean<Boolean> submitTransferEvent(@RequestBody TransactionListenerEvent transactionListenerEvent){
         return ResultBean.success(hubService.submitTransferEvent(transactionListenerEvent));
     }
 
+    /**
+     * 监听确认区块数事件
+     */
     @PostMapping(value = "confirmBlockNumEvent")
     public ResultBean<Boolean> confirmBlockNumEvent(@RequestBody ConfirmListenerEntity confirmListenerEntity){
         return ResultBean.success(hubService.confirmBlockNumEvent(confirmListenerEntity));
+    }
+
+    /**
+     * 监听ETH交易事件
+     */
+    @PostMapping(value = "/ethSubmitTransferEvent")
+    public ResultBean<Boolean> ethSubmitTransferEvent(@RequestBody EthTransactionReq ethTransactionReq){
+        return ResultBean.success(hubService.ethSubmitTransferEvent(ethTransactionReq));
     }
 
 }

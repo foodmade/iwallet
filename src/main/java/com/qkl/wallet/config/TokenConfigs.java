@@ -24,6 +24,8 @@ public class TokenConfigs {
 
         private String address;
 
+        private String secretKey;
+
         private List<ChildToken> child_tokens;
 
         @Data

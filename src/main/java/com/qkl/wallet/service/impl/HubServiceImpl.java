@@ -7,6 +7,7 @@ import com.qkl.wallet.common.enumeration.ExceptionEnum;
 import com.qkl.wallet.common.exception.BadRequestException;
 import com.qkl.wallet.core.transfer.OrderManage;
 import com.qkl.wallet.domain.ConfirmListenerEntity;
+import com.qkl.wallet.domain.EthTransactionReq;
 import com.qkl.wallet.domain.TransactionListenerEvent;
 import com.qkl.wallet.service.HubService;
 import com.qkl.wallet.vo.out.WithdrawCallback;
@@ -14,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 
 /**
@@ -56,11 +56,23 @@ public class HubServiceImpl implements HubService {
         log.info("Number of confirmation blocks received from the order listener");
         log.info("Detail info:{}",JSON.toJSONString(confirmListenerEntity));
 
+        //检查txHash是否存在,不存在则说明当前交易不是此服务器发起,需要拦截
+//        OrderManage.addChainOrder();
+
         WithdrawCallback callback = new WithdrawCallback(CallbackTypeEnum.CONFIRM_TYPE);
         callback.setTxnHash(confirmListenerEntity.getTransactionHash());
         callback.setConfirmBlockNumber(confirmListenerEntity.getConfirmNumber());
         eventService.addSuccessEvent(callback);
         return true;
+    }
+
+    @Override
+    public Boolean ethSubmitTransferEvent(EthTransactionReq ethTransactionReq) {
+
+
+
+
+        return null;
     }
 
     /**
