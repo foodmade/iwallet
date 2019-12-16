@@ -1,6 +1,8 @@
 package com.qkl.wallet.vo.out;
 
 import lombok.Data;
+
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
 /**
@@ -12,9 +14,9 @@ import java.math.BigInteger;
 @Data
 public class BalanceResponse {
 
-    private BigInteger balance;
+    private BigDecimal balance;
 
-    public BalanceResponse(BigInteger balance) {
+    public BalanceResponse(BigDecimal balance) {
         this.balance = balance;
     }
 }

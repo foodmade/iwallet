@@ -11,6 +11,6 @@ import java.math.BigInteger;
  **/
 public class Const {
 
-    //Default unit
-    public static final BigInteger _UNIT = BigInteger.valueOf(1000000000000000000L);
+    //Default token unit
+    public static final BigInteger _TOKEN_UNIT = BigInteger.valueOf(1000000000000000000L);
 }

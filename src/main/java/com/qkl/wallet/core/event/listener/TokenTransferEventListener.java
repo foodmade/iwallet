@@ -30,7 +30,7 @@ public class TokenTransferEventListener {
                     orderModel.getTokenName(),orderModel.getWithdraw().getAddress(),orderModel.getWithdraw().getTrace());
             String contractAddress = orderModel.getContractAddress();
             String toAddress = orderModel.getWithdraw().getAddress();
-            BigDecimal amount = orderModel.getWithdraw().getAmount().multiply(new BigDecimal(Const._UNIT));
+            BigDecimal amount = orderModel.getWithdraw().getAmount().multiply(new BigDecimal(Const._TOKEN_UNIT));
             String trace = orderModel.getWithdraw().getTrace();
             String tokenName = orderModel.getTokenName();
             String fromAddress = orderModel.getFromAddress();

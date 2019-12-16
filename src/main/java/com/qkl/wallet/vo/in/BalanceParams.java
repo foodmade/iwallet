@@ -17,4 +17,6 @@ public class BalanceParams {
 
     @NotNull(message = "Token name cannot be empty")
     private String tokenName;
+
+    private String address;
 }

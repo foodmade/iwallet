@@ -14,9 +14,8 @@ import com.qkl.wallet.contract.IToken;
 import com.qkl.wallet.contract.Token;
 import com.qkl.wallet.core.ContractMapper;
 import com.qkl.wallet.core.transfer.OrderManage;
-import com.qkl.wallet.core.transfer.OrderModel;
-import com.qkl.wallet.service.TransactionManageService;
 import com.qkl.wallet.service.WalletService;
+import com.qkl.wallet.vo.in.BalanceParams;
 import com.qkl.wallet.vo.in.WithdrawParams;
 import com.qkl.wallet.vo.in.WithdrawRequest;
 import com.qkl.wallet.vo.out.BalanceResponse;
@@ -128,7 +127,7 @@ public class WalletServiceImpl implements WalletService {
             }
             //Load contract client.
             BigInteger balance = iToken.balanceOf(address).send();
-            return new BalanceResponse(balance.divide(Const._UNIT));
+            return new BalanceResponse(WalletUtils.unitCover(balance));
         }catch (Exception e){
             log.error("Query contract address balance throw error. >>> [{}]",e.getMessage());
             throw new BadRequestException(e.getMessage());
@@ -140,7 +139,7 @@ public class WalletServiceImpl implements WalletService {
     public BalanceResponse getETHBalance(@NonNull String address) {
         try {
             EthGetBalance balance = web3j.ethGetBalance(address, DefaultBlockParameter.valueOf("latest")).send();
-            return new BalanceResponse(balance.getBalance());
+            return new BalanceResponse(WalletUtils.unitCover(balance.getBalance()));
         } catch (IOException e) {
             log.error("Query ETH balance throw error. >>> [{}]",e.getMessage());
             throw new BadRequestException(ExceptionEnum.BAD_REQUEST_ERR);
@@ -156,9 +155,9 @@ public class WalletServiceImpl implements WalletService {
     @Override
     public TransactionReceipt transferEth(String fromAddress, String toAddress, BigDecimal amount, String secretKey) {
         //Valid system wallet account balance is it enough.
-        BigInteger systemWalletBalance = getETHBalance(fromAddress).getBalance();
+        BigDecimal systemWalletBalance = getETHBalance(fromAddress).getBalance();
 
-        Assert.isTrue(amount.compareTo(new BigDecimal(systemWalletBalance)) < 0,"Insufficient available balance in system account");
+        Assert.isTrue(amount.compareTo(systemWalletBalance) < 0,"Insufficient available balance in system account");
 
         Credentials credentials = LightWallet.buildCredentials(secretKey);
         try {
@@ -180,7 +179,8 @@ public class WalletServiceImpl implements WalletService {
         EthGasPrice ethGasPrice;
         try {
             ethGasPrice = web3j.ethGasPrice().sendAsync().get();
-            return new GasResponse(ethGasPrice.getGasPrice());
+            log.info("获取到的gas:{}", ethGasPrice.getGasPrice());
+            return new GasResponse(WalletUtils.unitCover(ethGasPrice.getGasPrice()));
         } catch (Exception e) {
             log.error("Get eth recent gas price throw error. message:[{}]",e.getMessage());
             throw new BadRequestException(e.getMessage());
@@ -188,15 +188,24 @@ public class WalletServiceImpl implements WalletService {
     }
 
     @Override
-    public BalanceResponse getPlatformBalance(@NonNull String chain,@NonNull String tokenName) {
+    public BalanceResponse getPlatformBalance(BalanceParams balanceParams) {
+
+        String chain = balanceParams.getChain();
+        String tokenName = balanceParams.getTokenName();
 
         Optional<ChainEnum> optionalChainEnum = ChainEnum.find(chain);
         if(!optionalChainEnum.isPresent()) throw new BadRequestException(ExceptionEnum.INVALID_TOKEN_ERR);
         if(!optionalChainEnum.get().isValid()) throw new BadRequestException(ExceptionEnum.NOT_SUPPORT_ERR);
 
-        //Get token platform wallet address.
-        String address = foundPlatformAddress(tokenName,chain);
-        if(address == null) throw new BadRequestException(ExceptionEnum.INVALID_TOKEN_ERR);
+        String address;
+
+        if(balanceParams.getAddress() == null){
+            //Get token platform wallet address.
+            address = foundPlatformAddress(tokenName,chain);
+            if(address == null) throw new BadRequestException(ExceptionEnum.INVALID_TOKEN_ERR);
+        }else{
+            address = balanceParams.getAddress();
+        }
 
         //If current request chain == tokenName. And is ETH.
         if(chain.equals(tokenName) && chain.equals("ETH")){

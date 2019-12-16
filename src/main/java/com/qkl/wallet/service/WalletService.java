@@ -1,6 +1,7 @@
 package com.qkl.wallet.service;
 
 import com.qkl.wallet.vo.ResultBean;
+import com.qkl.wallet.vo.in.BalanceParams;
 import com.qkl.wallet.vo.in.WithdrawParams;
 import com.qkl.wallet.vo.in.WithdrawRequest;
 import com.qkl.wallet.vo.out.BalanceResponse;
@@ -71,7 +72,7 @@ public interface WalletService {
     /**
      * 获取对应币种下的平台钱包余额
      */
-    BalanceResponse getPlatformBalance(@NonNull String chain,@NonNull String tokenName);
+    BalanceResponse getPlatformBalance(BalanceParams balanceParams);
 
     /**
      * 通过代币名称获取对应的平台钱包地址 (代币)

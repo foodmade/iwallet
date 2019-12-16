@@ -3,6 +3,7 @@ package com.qkl.wallet.service;
 import com.qkl.wallet.common.Const;
 import com.qkl.wallet.common.enumeration.CallbackTypeEnum;
 import com.qkl.wallet.common.enumeration.Status;
+import com.qkl.wallet.common.walletUtil.WalletUtils;
 import com.qkl.wallet.contract.Token;
 import com.qkl.wallet.service.impl.EventService;
 import com.qkl.wallet.vo.in.WithdrawRequest;
@@ -44,7 +45,7 @@ public class EventServiceImpl implements EventService {
 
     private WithdrawCallback assemblyEventResponseCallModel(Token.TransferEventResponse eventResponse){
         WithdrawCallback callback = new WithdrawCallback(CallbackTypeEnum.RECHARGE_TYPE);
-        callback.setAmount(new BigDecimal(eventResponse.value).divide(new BigDecimal(Const._UNIT),18, BigDecimal.ROUND_DOWN) + "");
+        callback.setAmount(WalletUtils.unitCover(eventResponse.value) + "");
         callback.setRecepient(eventResponse.to);
         callback.setTxnHash(eventResponse.log.getTransactionHash());
         callback.setSender(eventResponse.from);

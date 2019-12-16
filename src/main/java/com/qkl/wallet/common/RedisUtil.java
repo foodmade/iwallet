@@ -1,6 +1,7 @@
 package com.qkl.wallet.common;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -18,6 +19,7 @@ import java.util.concurrent.TimeUnit;
  * @Description <>
  **/
 @Component
+@Order(1)
 public class RedisUtil {
 
     @Autowired
@@ -312,7 +314,6 @@ public class RedisUtil {
     public double hdecr(String key, String item,double by){
         return redisTemplate.opsForHash().increment(key, item,-by);
     }
-
     //============================set=============================
     /**
      * 根据key获取Set中的所有值

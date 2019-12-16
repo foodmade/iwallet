@@ -14,28 +14,22 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
-import org.web3j.abi.EventEncoder;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Function;
-import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.*;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.Request;
-import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.protocol.core.methods.response.Web3ClientVersion;
-import org.web3j.protocol.exceptions.TransactionException;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.protocol.websocket.WebSocketClient;
 import org.web3j.protocol.websocket.WebSocketService;
-import org.web3j.tx.ChainId;
-import org.web3j.tx.Contract;
 import org.web3j.tx.Transfer;
 import org.web3j.tx.gas.DefaultGasProvider;
 import org.web3j.utils.Convert;
@@ -122,7 +116,7 @@ public class WalletApplicationTests {
 //        String encodedFunction = EventEncoder.encode(Token.TRANSFER_EVENT);
         String contractAddress = "0xa36B054aFA6D95EF78841a0906b18d4d9cfEb119";
         String toAddress = "0xdF67ab61A941f4001a95255c57f586e7f99421f9";
-        BigInteger amount = Const._UNIT.multiply(new BigInteger("121"));
+        BigInteger amount = Const._TOKEN_UNIT.multiply(new BigInteger("121"));
 
         Function function = new Function(
                 "transfer",
@@ -233,7 +227,7 @@ public class WalletApplicationTests {
 
     @Test
     public void testTransferEth(){
-        walletService.transferEth("0xdF67ab61A941f4001a95255c57f586e7f99421f9",new BigDecimal("0.01").multiply(new BigDecimal(Const._UNIT)));
+        walletService.transferEth("0xdF67ab61A941f4001a95255c57f586e7f99421f9",new BigDecimal("0.01").multiply(new BigDecimal(Const._TOKEN_UNIT)));
     }
 
     @Test

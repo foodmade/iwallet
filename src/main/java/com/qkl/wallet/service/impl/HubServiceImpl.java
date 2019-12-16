@@ -5,6 +5,7 @@ import com.qkl.wallet.common.Const;
 import com.qkl.wallet.common.enumeration.CallbackTypeEnum;
 import com.qkl.wallet.common.enumeration.ExceptionEnum;
 import com.qkl.wallet.common.exception.BadRequestException;
+import com.qkl.wallet.common.walletUtil.WalletUtils;
 import com.qkl.wallet.core.transfer.OrderManage;
 import com.qkl.wallet.domain.ConfirmListenerEntity;
 import com.qkl.wallet.domain.EthTransactionReq;
@@ -16,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
 /**
  * @Author Jackies
@@ -41,7 +43,7 @@ public class HubServiceImpl implements HubService {
         //打包提交回业务服务器
         WithdrawCallback callback = new WithdrawCallback(callbackTypeEnum);
         callback.setTxnHash(event.getTransactionHash());
-        callback.setAmount(new BigDecimal(event.getReturnValues().getValue()).divide(new BigDecimal(Const._UNIT),8,BigDecimal.ROUND_DOWN) + "");
+        callback.setAmount(WalletUtils.unitCover(new BigDecimal(event.getReturnValues().getValue())) + "");
         callback.setSender(event.getReturnValues().getFrom());
         callback.setRecepient(event.getReturnValues().getTo());
         callback.set_id(event.getId());
@@ -56,9 +58,6 @@ public class HubServiceImpl implements HubService {
         log.info("Number of confirmation blocks received from the order listener");
         log.info("Detail info:{}",JSON.toJSONString(confirmListenerEntity));
 
-        //检查txHash是否存在,不存在则说明当前交易不是此服务器发起,需要拦截
-//        OrderManage.addChainOrder();
-
         WithdrawCallback callback = new WithdrawCallback(CallbackTypeEnum.CONFIRM_TYPE);
         callback.setTxnHash(confirmListenerEntity.getTransactionHash());
         callback.setConfirmBlockNumber(confirmListenerEntity.getConfirmNumber());
@@ -70,7 +69,10 @@ public class HubServiceImpl implements HubService {
     public Boolean ethSubmitTransferEvent(EthTransactionReq ethTransactionReq) {
 
         //由于ETH的交易是通过block监听,这是属于共有块,所以有可能监控到的不是此服务器发起的交易,这儿只接受从此钱包服务创建的钱包地址交易
-
+        if(!WalletUtils.validWalletAddress(ethTransactionReq.getTo())){
+            log.info("This transaction address:[{}] does not belong to the current wallet service",ethTransactionReq.getTo());
+            return false;
+        }
 
         log.info("ETH Received information from the order monitor.....");
         log.info("ETH Detail info:{}", JSON.toJSONString(ethTransactionReq));
@@ -83,7 +85,7 @@ public class HubServiceImpl implements HubService {
         callback.setSender(ethTransactionReq.getFrom());
         callback.setGas(ethTransactionReq.getGas());
         callback.setRecepient(ethTransactionReq.getTo());
-        callback.setAmount(ethTransactionReq.getValue().divide(new BigDecimal(Const._UNIT),8,BigDecimal.ROUND_DOWN) + "");
+        callback.setAmount(WalletUtils.unitCover(ethTransactionReq.getValue()) + "");
         callback.setTrace(OrderManage.getTraceId(ethTransactionReq.getHash()));
         callback.setTokenName(ethTransactionReq.getTokenName());
         eventService.addSuccessEvent(callback);

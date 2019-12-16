@@ -20,6 +20,9 @@ public class JedisKey {
     //提现订单的交易hash缓存key
     private static final String _WITHDRAW_TX_HASH_QUEUE = "WITHDRAW_TX_HASH";
 
+    //所有钱包地址缓存key
+    private static final String _WALLET_ADDRESS_KET = "_WALLET_ADDRESS_KET";
+
     //主链币订单缓存key
     private static final String _CACHE_ORDER_CHAIN_KEY = "CHAIN";
 
@@ -48,13 +51,19 @@ public class JedisKey {
      */
     public static String buildWithdrawTxHashKey(){
         return buildKey(_WITHDRAW_TX_HASH_QUEUE);
-
     }
     /**
      * 缓存订单key
      */
     public static String buildChainOrderKey(String key){
         return buildKey(_CACHE_ORDER_CHAIN_KEY,key);
+    }
+
+    /**
+     * 从此钱包服务创建的所有钱包信息缓存key
+     */
+    public static String buildWalletAddressKey(){
+        return buildKey(_WALLET_ADDRESS_KET);
     }
 
     private static String buildKey(Object str1, Object... array) {

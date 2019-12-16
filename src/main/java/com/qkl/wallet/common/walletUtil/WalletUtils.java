@@ -2,7 +2,9 @@ package com.qkl.wallet.common.walletUtil;
 
 import com.alibaba.fastjson.JSON;
 import com.qkl.wallet.common.Const;
+import com.qkl.wallet.common.JedisKey;
 import com.qkl.wallet.common.SpringContext;
+import com.qkl.wallet.common.tools.IOCUtils;
 import com.qkl.wallet.core.ContractMapper;
 import com.qkl.wallet.domain.RawTransactionResEntity;
 import com.qkl.wallet.service.impl.EventService;
@@ -114,8 +116,28 @@ public class WalletUtils {
      * @param walletInfo 钱包对象
      */
     public static void saveWalletInfo(CreateWalletResponse walletInfo) {
+        IOCUtils._Get_Redis().hset(JedisKey.buildWalletAddressKey(),walletInfo.getAddress(),JSON.toJSONString(walletInfo));
+    }
 
+    /**
+     * 检查钱包地址是否属于当前钱包服务创建
+     * @param walletAddress ETH钱包地址
+     */
+    public static boolean validWalletAddress(String walletAddress){
+        if(walletAddress == null){
+            return false;
+        }
+        return IOCUtils._Get_Redis().hHasKey(JedisKey.buildWalletAddressKey(),walletAddress);
+    }
 
+    /**
+     * 单位换算 bigInt换算为eth
+     */
+    public static BigDecimal unitCover(BigInteger amount){
+        return unitCover(new BigDecimal(amount));
+    }
 
+    public static BigDecimal unitCover(BigDecimal amount){
+        return amount.divide(new BigDecimal(Const._TOKEN_UNIT),18,BigDecimal.ROUND_DOWN);
     }
 }

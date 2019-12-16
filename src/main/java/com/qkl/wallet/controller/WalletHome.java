@@ -1,7 +1,6 @@
 package com.qkl.wallet.controller;
 
 import com.qkl.wallet.common.Const;
-import com.qkl.wallet.contract.Token;
 import com.qkl.wallet.contract.Usdt;
 import com.qkl.wallet.service.WalletService;
 import com.qkl.wallet.vo.ResultBean;
@@ -16,7 +15,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
-import org.web3j.protocol.http.HttpService;
 import org.web3j.tx.gas.DefaultGasProvider;
 
 import javax.validation.Valid;
@@ -83,7 +81,7 @@ public class WalletHome {
      */
     @PostMapping(value = "/getPlatformBalance")
     public ResultBean<BalanceResponse> getPlatformBalance(@RequestBody @Valid  BalanceParams balanceParams){
-        return ResultBean.success(walletService.getPlatformBalance(balanceParams.getChain(),balanceParams.getTokenName()));
+        return ResultBean.success(walletService.getPlatformBalance(balanceParams));
     }
 
     /**
@@ -95,7 +93,7 @@ public class WalletHome {
         return ResultBean.success(walletService.transferEth(toAddress,amount));
     }
 
-    @GetMapping(value = "/get_eth_gas")
+    @PostMapping(value = "/get_eth_gas")
     public ResultBean<GasResponse> getEthGas(){
         return ResultBean.success(walletService.getEthGas());
     }
@@ -107,7 +105,7 @@ public class WalletHome {
     public ResultBean deployContract(@RequestParam String address,@RequestParam String type) throws Exception {
         Credentials credentials = Credentials.create(address);
 //        Token myToken = Token.deploy(web3j,credentials,new DefaultGasProvider(),BigInteger.valueOf(2500).multiply(Const._UNIT),type,type).send();
-        Usdt myToken = Usdt.deploy(web3j,credentials,new DefaultGasProvider(),BigInteger.valueOf(2500).multiply(Const._UNIT),type,type,BigInteger.valueOf(100)).send();
+        Usdt myToken = Usdt.deploy(web3j,credentials,new DefaultGasProvider(),BigInteger.valueOf(2500).multiply(Const._TOKEN_UNIT),type,type,BigInteger.valueOf(100)).send();
         System.out.println("合约部署完毕 状态:" + myToken.isValid() + " 地址：" + myToken.getContractAddress());
         return ResultBean.success(null);
     }

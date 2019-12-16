@@ -2,6 +2,7 @@ package com.qkl.wallet.vo.out;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
 /**
@@ -12,9 +13,9 @@ import java.math.BigInteger;
 @Data
 public class GasResponse {
 
-    private BigInteger gas;
+    private BigDecimal gas;
 
-    public GasResponse(BigInteger gas) {
+    public GasResponse(BigDecimal gas) {
         this.gas = gas;
     }
 }
