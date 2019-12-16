@@ -6,6 +6,7 @@ import com.qkl.wallet.common.enumeration.ChainEnum;
 import com.qkl.wallet.common.enumeration.ExceptionEnum;
 import com.qkl.wallet.common.exception.BadRequestException;
 import com.qkl.wallet.common.walletUtil.LightWallet;
+import com.qkl.wallet.common.walletUtil.WalletUtils;
 import com.qkl.wallet.common.walletUtil.outModel.WalletAddressInfo;
 import com.qkl.wallet.config.ApplicationConfig;
 import com.qkl.wallet.config.TokenConfigs;
@@ -65,7 +66,10 @@ public class WalletServiceImpl implements WalletService {
             WalletAddressInfo walletAddressInfo = LightWallet.createNewWallet(ApplicationConfig.defaultPassword);
             Credentials credentials = LightWallet.openWallet(ApplicationConfig.defaultPassword, walletAddressInfo.getName());
             String privateKey = Numeric.toHexStringNoPrefix(credentials.getEcKeyPair().getPrivateKey());
-            return new CreateWalletResponse(credentials.getAddress(),walletAddressInfo.getName(),privateKey);
+            CreateWalletResponse response = new CreateWalletResponse(credentials.getAddress(),walletAddressInfo.getName(),privateKey);
+            //Save the created wallet address information
+            WalletUtils.saveWalletInfo(response);
+            return response;
         } catch (Exception e) {
             log.error("Create wallet throw error . throw info >>> [{}]",e.getMessage());
             return null;

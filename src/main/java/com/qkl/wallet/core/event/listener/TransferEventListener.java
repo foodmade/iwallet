@@ -39,12 +39,11 @@ public class TransferEventListener {
             String fromAddress = orderModel.getFromAddress();
             BigDecimal amount = orderModel.getWithdraw().getAmount();
             String secretKey = walletService.foundTokenSecretKey(orderModel.getTokenName());
-            String trace = orderModel.getWithdraw().getTrace();
             Assert.notNull(secretKey,"ETH transfer kill. Because the platform wallet secretKey is empty");
             TransactionReceipt receipt = walletService.transferEth(fromAddress,toAddress,amount,secretKey);
 
             log.info("Eth transfer successful. Receipt transactionHash:[{}]",receipt.getTransactionHash());
-            OrderManage.addWithdrawTxHashNumber(receipt.getTransactionHash(),trace);
+            OrderManage.addWithdrawTxHashNumber(receipt.getTransactionHash(),"");
             //nonce随机数检测
             WalletUtils.monitorNonceIsUpdate(LightWallet.getNonce(fromAddress),fromAddress);
         }catch (Exception e){

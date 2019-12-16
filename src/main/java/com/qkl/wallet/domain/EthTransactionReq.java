@@ -32,4 +32,5 @@ public class EthTransactionReq {
     private String hash;
     private BigDecimal gasPrice;
     private String standardV;
+    private String tokenName;
 }

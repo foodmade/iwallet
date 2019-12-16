@@ -69,10 +69,25 @@ public class HubServiceImpl implements HubService {
     @Override
     public Boolean ethSubmitTransferEvent(EthTransactionReq ethTransactionReq) {
 
+        //由于ETH的交易是通过block监听,这是属于共有块,所以有可能监控到的不是此服务器发起的交易,这儿只接受从此钱包服务创建的钱包地址交易
 
 
+        log.info("ETH Received information from the order monitor.....");
+        log.info("ETH Detail info:{}", JSON.toJSONString(ethTransactionReq));
+        //判断是充值订单的回调还是提现订单的回调
+        CallbackTypeEnum callbackTypeEnum = judgeOrderType(ethTransactionReq.getHash());
+        log.info("ETH Current order is [{}]",callbackTypeEnum.getDesc());
 
-        return null;
+        WithdrawCallback callback = new WithdrawCallback(callbackTypeEnum);
+        callback.setTxnHash(ethTransactionReq.getHash());
+        callback.setSender(ethTransactionReq.getFrom());
+        callback.setGas(ethTransactionReq.getGas());
+        callback.setRecepient(ethTransactionReq.getTo());
+        callback.setAmount(ethTransactionReq.getValue().divide(new BigDecimal(Const._UNIT),8,BigDecimal.ROUND_DOWN) + "");
+        callback.setTrace(OrderManage.getTraceId(ethTransactionReq.getHash()));
+        callback.setTokenName(ethTransactionReq.getTokenName());
+        eventService.addSuccessEvent(callback);
+        return true;
     }
 
     /**

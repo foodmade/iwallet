@@ -7,6 +7,7 @@ import com.qkl.wallet.core.ContractMapper;
 import com.qkl.wallet.domain.RawTransactionResEntity;
 import com.qkl.wallet.service.impl.EventService;
 import com.qkl.wallet.vo.in.WithdrawRequest;
+import com.qkl.wallet.vo.out.CreateWalletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.datatypes.Address;
@@ -106,5 +107,15 @@ public class WalletUtils {
                 e.printStackTrace();
             }
         }
+    }
+
+    /**
+     * 缓存创建的钱包信息
+     * @param walletInfo 钱包对象
+     */
+    public static void saveWalletInfo(CreateWalletResponse walletInfo) {
+
+
+
     }
 }
