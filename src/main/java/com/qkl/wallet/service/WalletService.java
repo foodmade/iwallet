@@ -1,20 +1,15 @@
 package com.qkl.wallet.service;
 
-import com.qkl.wallet.vo.ResultBean;
 import com.qkl.wallet.vo.in.BalanceParams;
 import com.qkl.wallet.vo.in.WithdrawParams;
-import com.qkl.wallet.vo.in.WithdrawRequest;
 import com.qkl.wallet.vo.out.BalanceResponse;
 import com.qkl.wallet.vo.out.CreateWalletResponse;
 import com.qkl.wallet.vo.out.GasResponse;
 import com.qkl.wallet.vo.out.WithdrawResponse;
 import org.springframework.lang.NonNull;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
-
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.List;
 
 public interface WalletService {
 
