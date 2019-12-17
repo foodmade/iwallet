@@ -1,5 +1,6 @@
 package com.qkl.wallet.config;
 
+import com.alibaba.fastjson.JSON;
 import com.qkl.wallet.common.SpringContext;
 import com.qkl.wallet.common.enumeration.TokenEventEnum;
 import com.qkl.wallet.common.tools.ReflectionUtils;
@@ -12,6 +13,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameterNumber;
 import org.web3j.tx.gas.ContractGasProvider;
 import org.web3j.tx.gas.DefaultGasProvider;
 
@@ -36,12 +38,20 @@ public class ContractConfiguration {
     @Autowired
     private TokenConfigs tokenConfigs;
 
+    @Autowired
+    private Web3j web3j;
+
     @PostConstruct
     public void initializationContractConfiguration(){
         //通过Token.json配置文件,反解析所有代币类型,并生成合约加载器.
         if(!loadContractObject()){
             return;
         }
+
+        web3j.replayPastBlocksFlowable(new DefaultBlockParameterNumber(15516310),new DefaultBlockParameterNumber(15516320),true,true).subscribe(block -> {
+            System.out.println(block.getBlock().toString());
+        });
+
         //创建已验证合法的合约加载器工作线程.
         createContractWorkThread();
     }
