@@ -1,14 +1,35 @@
 package com.qkl.wallet;
 
+import com.alibaba.fastjson.JSON;
+import com.qkl.wallet.common.Const;
+import com.qkl.wallet.common.JedisKey;
+import com.qkl.wallet.common.SpringContext;
+import com.qkl.wallet.common.tools.IOCUtils;
+import com.qkl.wallet.common.walletUtil.LightWallet;
 import com.qkl.wallet.common.walletUtil.WalletUtils;
 import com.qkl.wallet.vo.out.CreateWalletResponse;
 import org.junit.Test;
 import org.reactivestreams.Subscription;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.generated.Uint256;
+import org.web3j.crypto.RawTransaction;
+import org.web3j.crypto.TransactionEncoder;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
+import org.web3j.protocol.core.methods.response.EthSendTransaction;
+import org.web3j.tx.Contract;
+import org.web3j.utils.Numeric;
 
+import java.io.IOException;
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.concurrent.ExecutionException;
 
 /**
  * @Author Jackies
@@ -20,6 +41,9 @@ public class CommonTest extends WalletApplicationTests {
     @Autowired
     private Web3j web3j;
 
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
+
     @Test
     public void testBlockNumber(){
         CreateWalletResponse response = new CreateWalletResponse("0xdF67ab61A941f4001a95255c57f586e7f99421f9","TEST_WALLET","86030747098382DD1F94C513E6B4AF9EADA76B75ADEF08CA96864DD14382A18D");
@@ -27,4 +51,57 @@ public class CommonTest extends WalletApplicationTests {
 
     }
 
+    @Test
+    public void testTokenSignTransfer() throws Exception {
+
+        String toAddress = "0x493fb23d930458a84b49B5cA53D961e039868A58";
+        String fromAddress = "0x7e30710300837D0F174Eaa896638BDFfaaA2C2f0";
+        String contractAddress = "0x19ba60a0d3eae900761078c536b1b065937671a8";
+        String key = "ED8C110972FBFF97574A53D5029893514BD9333E97F369A749CD46033275C6D7";
+        BigInteger amount = new BigInteger("101").multiply(Const._TOKEN_UNIT);
+
+
+        BigInteger GAS_PRICE = Contract.GAS_PRICE;
+        BigInteger GAS_LIMIT = Contract.GAS_LIMIT;
+
+        Function function = new Function(
+                "transfer",
+                Arrays.asList(new Address(toAddress), new Uint256(amount)),
+                Collections.emptyList());
+
+        String encodedFunction = FunctionEncoder.encode(function);
+        BigInteger nonce = LightWallet.getNonce(fromAddress);
+
+        RawTransaction rawTransaction = RawTransaction.createTransaction(nonce,
+                GAS_PRICE,
+                GAS_LIMIT,
+                contractAddress, encodedFunction);
+        //签名Transaction，这里要对交易做签名
+        byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, LightWallet.buildCredentials(key));
+        String hexValue = Numeric.toHexString(signMessage);
+        //发送离线交易
+        EthSendTransaction ethSendTransaction;
+        try {
+            ethSendTransaction = SpringContext.getBean(Web3j.class).ethSendRawTransaction(hexValue).send();
+            System.out.println(JSON.toJSONString(ethSendTransaction));
+        } catch (IOException e) {
+            throw e;
+        }
+    }
+
+    @Test
+    public void testExistAddress(){
+
+        //0x1348ef18771Cc3e43296dD4DAE22720708680375
+        String address = "0x1348ef18771Cc3e43296dD4DAE22720708680375"; //这里是我的item  key是JedisKey.buildWalletAddressKey()
+        System.out.println( IOCUtils._Get_Redis().hget(JedisKey.buildWalletAddressKey(),address));
+    }
+
+    @Test
+    public void testExistAddressSet(){
+
+        //0x1348ef18771Cc3e43296dD4DAE22720708680375
+        String address = "0x8a5f7e444f0072b44198a8c32e5cc2c607c9a6a7"; //这里是我的item  key是JedisKey.buildWalletAddressKey()
+        System.out.println( IOCUtils._Get_Redis().hHasKey(JedisKey.buildWalletAddressKey(),address));
+    }
 }

@@ -56,6 +56,14 @@ public interface WalletService {
     Boolean transferEth(String toAddress, BigDecimal amount);
 
     /**
+     * 2包之前互相转账,fromAddress必须是平台创建的钱包,会自动查找对应的秘钥
+     * @param fromAddress  打款地址
+     * @param toAddress    收款地址
+     * @param amount       金额
+     */
+    Boolean transferEth(String fromAddress,String toAddress,BigDecimal amount);
+
+    /**
      * 2个钱包间的互转
      * @param fromAddress   打款地址
      * @param toAddress     收款地址

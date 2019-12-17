@@ -131,6 +131,25 @@ public class WalletUtils {
     }
 
     /**
+     * 根据钱包地址获取钱包秘钥
+     */
+    public static String getKeySecretByAddress(String walletAddress){
+        CreateWalletResponse detail = getWalletDetailByAddress(walletAddress);
+        if(detail == null){
+            return null;
+        }
+        return detail.getPrivateKey();
+    }
+
+    public static CreateWalletResponse getWalletDetailByAddress(String walletAddress){
+        Object detailObj = IOCUtils._Get_Redis().hget(JedisKey.buildWalletAddressKey(),walletAddress);
+        if(detailObj == null){
+            return null;
+        }
+        return JSON.parseObject(detailObj.toString(),CreateWalletResponse.class);
+    }
+
+    /**
      * 单位换算 bigInt换算为eth
      */
     public static BigDecimal unitCover(BigInteger amount){

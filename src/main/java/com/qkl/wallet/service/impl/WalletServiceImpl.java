@@ -5,6 +5,7 @@ import com.qkl.wallet.common.Const;
 import com.qkl.wallet.common.enumeration.ChainEnum;
 import com.qkl.wallet.common.enumeration.ExceptionEnum;
 import com.qkl.wallet.common.exception.BadRequestException;
+import com.qkl.wallet.common.tools.IOCUtils;
 import com.qkl.wallet.common.walletUtil.LightWallet;
 import com.qkl.wallet.common.walletUtil.WalletUtils;
 import com.qkl.wallet.common.walletUtil.outModel.WalletAddressInfo;
@@ -58,6 +59,8 @@ public class WalletServiceImpl implements WalletService {
     private Web3j web3j;
     @Autowired
     private TokenConfigs tokenConfigs;
+    @Autowired
+    private WalletService walletService;
 
     @Override
     public CreateWalletResponse createWallet() {
@@ -153,6 +156,18 @@ public class WalletServiceImpl implements WalletService {
     }
 
     @Override
+    public Boolean transferEth(String fromAddress, String toAddress, BigDecimal amount) {
+        if(fromAddress == null){
+            //如果打款地址是空,则默认使用平台钱包地址打款
+            fromAddress = ApplicationConfig.walletETHAddress;
+        }
+        //根据钱包地址查找对应的秘钥
+        String secretKey = walletService.foundTokenSecretKey(fromAddress);
+        transferEth(fromAddress, toAddress, amount,secretKey);
+        return true;
+    }
+
+    @Override
     public TransactionReceipt transferEth(String fromAddress, String toAddress, BigDecimal amount, String secretKey) {
         //Valid system wallet account balance is it enough.
         BigDecimal systemWalletBalance = getETHBalance(fromAddress).getBalance();
@@ -163,7 +178,7 @@ public class WalletServiceImpl implements WalletService {
         try {
             TransactionReceipt transactionReceipt = Transfer.sendFunds(
                     web3j, credentials, toAddress,
-                    amount, Convert.Unit.WEI).send();
+                    amount.multiply(new BigDecimal(Const._TOKEN_UNIT)), Convert.Unit.WEI).send();
             log.info("Eth transfer successful. transactionReceipt:{}",JSON.toJSONString(transactionReceipt));
             return transactionReceipt;
         } catch (Exception e) {
@@ -259,16 +274,26 @@ public class WalletServiceImpl implements WalletService {
         return null;
     }
 
-    public String foundTokenSecretKey(String chain){
+    public String foundTokenSecretKey(String address){
+        //先从token.json查找,如果未查询到,再根据redis缓存获取
+        String key = foundTokenSecretKeyWithJsonConfig(address);
+        if(key != null && !"".equals(key)){
+            return key;
+        }
+        //从redis缓存获取
+        return WalletUtils.getKeySecretByAddress(address);
+    }
+
+    private String foundTokenSecretKeyWithJsonConfig(String address){
         List<TokenConfigs.TokenConfig> configs = tokenConfigs.getTokenConfigs();
 
         for (TokenConfigs.TokenConfig config : configs) {
-            if(config.getToken_type().equals(chain)){
+            if(config.getAddress().equals(address)){
                 return config.getSecretKey();
             }
             List<TokenConfigs.TokenConfig.ChildToken> childTokens = config.getChild_tokens();
             for (TokenConfigs.TokenConfig.ChildToken childToken : childTokens) {
-                if(childToken.getToken_name().equals(chain)){
+                if(childToken.getAddress().equals(address)){
                     return childToken.getSecretKey();
                 }
             }

@@ -17,7 +17,12 @@ import java.math.BigDecimal;
 public class WithdrawRequest implements Serializable {
 
     /**
-     * 转账地址
+     * 打款地址
+     */
+    private String fromAddress;
+
+    /**
+     * 收款地址
      */
     private String address;
     /**

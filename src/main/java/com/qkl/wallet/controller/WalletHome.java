@@ -5,6 +5,7 @@ import com.qkl.wallet.contract.Usdt;
 import com.qkl.wallet.service.WalletService;
 import com.qkl.wallet.vo.ResultBean;
 import com.qkl.wallet.vo.in.BalanceParams;
+import com.qkl.wallet.vo.in.EthTransferParams;
 import com.qkl.wallet.vo.in.WithdrawParams;
 import com.qkl.wallet.vo.out.BalanceResponse;
 import com.qkl.wallet.vo.out.CreateWalletResponse;
@@ -87,12 +88,15 @@ public class WalletHome {
     /**
      * 以太币之间的转账
      */
-    @GetMapping(value = "/eth_transfer")
-    public ResultBean<Boolean> eth_transfer(@RequestParam @NotNull(message = "Address must not be null")String toAddress,
-                                            @RequestParam @NotNull(message = "The transaction amount cannot be empty")BigDecimal amount){
-        return ResultBean.success(walletService.transferEth(toAddress,amount));
+    @PostMapping(value = "/eth_transfer")
+    public ResultBean<Boolean> eth_transfer(@RequestBody @Valid EthTransferParams ethTransferParams){
+        return ResultBean.success(walletService.transferEth(ethTransferParams.getFromAddress(),ethTransferParams.getToAddress(),ethTransferParams.getAmount()));
     }
 
+
+    /**
+     * 获取推荐燃油费
+     */
     @PostMapping(value = "/get_eth_gas")
     public ResultBean<GasResponse> getEthGas(){
         return ResultBean.success(walletService.getEthGas());

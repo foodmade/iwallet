@@ -17,6 +17,7 @@ import org.springframework.util.Assert;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
 /**
  * @Author Jackies
@@ -38,14 +39,17 @@ public class TransferEventListener {
             String toAddress = orderModel.getWithdraw().getAddress();
             String fromAddress = orderModel.getFromAddress();
             BigDecimal amount = orderModel.getWithdraw().getAmount();
-            String secretKey = walletService.foundTokenSecretKey(orderModel.getTokenName());
+            String secretKey = walletService.foundTokenSecretKey(fromAddress);
+
+            BigInteger nonce = LightWallet.getNonce(fromAddress);
+
             Assert.notNull(secretKey,"ETH transfer kill. Because the platform wallet secretKey is empty");
             TransactionReceipt receipt = walletService.transferEth(fromAddress,toAddress,amount,secretKey);
 
             log.info("Eth transfer successful. Receipt transactionHash:[{}]",receipt.getTransactionHash());
-            OrderManage.addWithdrawTxHashNumber(receipt.getTransactionHash(),"");
+            OrderManage.addWithdrawTxHashNumber(receipt.getTransactionHash(),orderModel.getWithdraw().getTrace());
             //nonce随机数检测
-            WalletUtils.monitorNonceIsUpdate(LightWallet.getNonce(fromAddress),fromAddress);
+            WalletUtils.monitorNonceIsUpdate(nonce,fromAddress);
         }catch (Exception e){
             log.error("TransferEventListener ETH throw error. message:[{}]",e.getMessage());
             e.printStackTrace();
