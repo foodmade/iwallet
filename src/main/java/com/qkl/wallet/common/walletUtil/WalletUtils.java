@@ -78,6 +78,7 @@ public class WalletUtils {
                 GAS_PRICE,
                 GAS_LIMIT,
                 contractAddress, encodedFunction);
+
         //签名Transaction，这里要对交易做签名
         byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, LightWallet.buildDefaultCredentials());
         String hexValue = Numeric.toHexString(signMessage);

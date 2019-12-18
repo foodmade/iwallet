@@ -15,4 +15,7 @@ public class Config {
 
     //每次同步区块的大小
     private Integer BlockInterval;
+
+    //最大确认区块数
+    private Integer confirmMaxCount;
 }

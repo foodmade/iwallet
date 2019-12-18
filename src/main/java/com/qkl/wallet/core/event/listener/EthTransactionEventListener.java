@@ -2,9 +2,12 @@ package com.qkl.wallet.core.event.listener;
 
 import com.alibaba.fastjson.JSON;
 import com.qkl.wallet.common.Const;
+import com.qkl.wallet.common.JedisKey;
+import com.qkl.wallet.common.RedisUtil;
 import com.qkl.wallet.common.walletUtil.WalletUtils;
 import com.qkl.wallet.core.event.EthTransactionEvent;
 import com.qkl.wallet.core.manage.OrderManage;
+import com.qkl.wallet.domain.Confirm;
 import com.qkl.wallet.domain.InputData;
 import com.qkl.wallet.service.WalletService;
 import com.qkl.wallet.service.impl.EventService;
@@ -13,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import org.web3j.abi.Utils;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterNumber;
 import org.web3j.protocol.core.methods.response.EthBlock;
@@ -41,6 +43,8 @@ public class EthTransactionEventListener {
     private EventService eventService;
     @Autowired
     private WalletService walletService;
+    @Autowired
+    private RedisUtil redisUtil;
 
     @EventListener
     public void onApplicationEvent(EthTransactionEvent event) {
@@ -75,12 +79,26 @@ public class EthTransactionEventListener {
 
             String input = transactionObject.getInput();
 
-            if(Const._ZERO_HEX.equals(input)){
+            if(Const._EMPTY_HEX.equals(input)){
                 //如果input是0x(空输入),则认为是ETH交易,分发给ETH处理器
                 ethMonitorHandler(transactionObject);
             }else{
                 tokenMonitorHandler(transactionObject);
             }
+        }
+    }
+
+    /**
+     * 1 将hash加入到任务队列
+     * 2 将confirm详细信息保存至redis
+     * 区块确认器会从任务队列中获取hash进行对比,如果已经达到最大确认数,则会将对应hash从任务队列移除
+     */
+    private void createConfirmBlockNumberTask(Confirm confirm) {
+        //保存基本信息
+        redisUtil.hset(JedisKey._CONFIRM_HASH_INFO,confirm.getHash(),JSON.toJSONString(confirm));
+        if(confirm.getStatus()){
+            //添加到任务队列
+            redisUtil.sSet(JedisKey._CONFIRM_SCAN_QUEUE,confirm.getHash());
         }
     }
 
@@ -120,9 +138,9 @@ public class EthTransactionEventListener {
             log.info("Token transfer valid passed. \n tokenName:[{}] \n fromAddress:[{}] \n toAddress:[{}] \n amount:[{}] \n status:[{}] \n transaction detail:{}"
                     ,tokenName,transactionObject.getFrom(),inputData.getAddress(),inputData.getAmount(),status,JSON.toJSONString(transactionObject));
 
-
-
             callbackServer(loadCallback(transactionObject,inputData.getAddress(),inputData.getAmount(),tokenName,status));
+            //创建确认区块数任务
+            createConfirmBlockNumberTask(new Confirm(transactionObject.getHash(),transactionObject.getBlockNumber().longValue(),status));
         } catch (Exception e) {
             log.error("Token transfer handler throw error. inputStr:[{}] message:{{}}",transactionObject.getInput(),e.getMessage());
         }
@@ -139,6 +157,8 @@ public class EthTransactionEventListener {
         log.info("Eth transfer valid passed. \n tokenName:[ETH] \n fromAddress:[{}] \n toAddress:[{}] \n amount:[{}] status:[{}]",transactionObject.getFrom(),
                 transactionObject.getTo(),transactionObject.getValue(),status);
         callbackServer(loadCallback(transactionObject,transactionObject.getTo(),transactionObject.getValue(),"ETH",status));
+        //创建确认区块数任务
+        createConfirmBlockNumberTask(new Confirm(transactionObject.getHash(),transactionObject.getBlockNumber().longValue(),status));
     }
 
     private WithdrawCallback loadCallback(EthBlock.TransactionObject event, String toAddress, BigInteger amount,String tokenName,Boolean status){
@@ -150,6 +170,7 @@ public class EthTransactionEventListener {
         callback.setTrace(OrderManage.getTraceId(event.getHash()));
         callback.setTokenName(tokenName);
         callback.setStatus(status);
+        callback.setGas(event.getGas().toString());
         return callback;
     }
 

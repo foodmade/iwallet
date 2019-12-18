@@ -36,6 +36,7 @@ public class TransactionMonitorThread extends Thread{
      */
     @Override
     public void run() {
+        log.info("Start Transaction monitor handler thread work.");
         while (true){
             monitor();
             sleep();

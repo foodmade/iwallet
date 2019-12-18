@@ -1,5 +1,6 @@
 package com.qkl.wallet.config;
 
+import com.qkl.wallet.common.RedisUtil;
 import com.qkl.wallet.common.enumeration.TokenEventEnum;
 import com.qkl.wallet.common.tools.ReflectionUtils;
 import com.qkl.wallet.common.walletUtil.LightWallet;
@@ -40,6 +41,8 @@ public class ChainConfiguration {
     private TokenConfigs tokenConfigs;
     @Autowired
     private Web3j web3j;
+    @Autowired
+    private RedisUtil redisUtil;
 
     @PostConstruct
     public void initializationContractConfiguration() throws IOException {
