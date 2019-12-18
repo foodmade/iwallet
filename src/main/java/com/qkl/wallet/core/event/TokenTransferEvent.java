@@ -1,6 +1,6 @@
 package com.qkl.wallet.core.event;
 
-import com.qkl.wallet.core.transfer.OrderModel;
+import com.qkl.wallet.domain.OrderModel;
 import lombok.Data;
 import org.springframework.context.ApplicationEvent;
 

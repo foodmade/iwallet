@@ -1,8 +1,11 @@
 package com.qkl.wallet.common;
 
+import org.springframework.stereotype.Service;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
+@Service
 public class UtilsService {
 
     public static String toDecimal(int decimal,BigInteger integer){

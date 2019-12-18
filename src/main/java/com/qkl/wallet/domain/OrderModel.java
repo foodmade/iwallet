@@ -1,4 +1,4 @@
-package com.qkl.wallet.core.transfer;
+package com.qkl.wallet.domain;
 
 import com.qkl.wallet.vo.in.WithdrawRequest;
 import lombok.Data;

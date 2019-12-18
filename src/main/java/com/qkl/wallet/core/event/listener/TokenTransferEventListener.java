@@ -3,9 +3,9 @@ package com.qkl.wallet.core.event.listener;
 import com.qkl.wallet.common.Const;
 import com.qkl.wallet.common.walletUtil.WalletUtils;
 import com.qkl.wallet.core.event.TokenTransferEvent;
-import com.qkl.wallet.core.transfer.OrderManage;
-import com.qkl.wallet.core.transfer.OrderModel;
-import com.qkl.wallet.core.transfer.work.WorkThread;
+import com.qkl.wallet.core.manage.OrderManage;
+import com.qkl.wallet.domain.OrderModel;
+import com.qkl.wallet.core.transfer.work.OrderWorkThread;
 import com.qkl.wallet.domain.RawTransactionResEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -49,7 +49,7 @@ public class TokenTransferEventListener {
             e.printStackTrace();
         }finally {
             //unlock work thread.
-            ((WorkThread)event.getSource()).play();
+            ((OrderWorkThread)event.getSource()).play();
         }
     }
 

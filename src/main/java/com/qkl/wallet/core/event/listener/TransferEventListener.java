@@ -1,14 +1,12 @@
 package com.qkl.wallet.core.event.listener;
 
-import com.alibaba.fastjson.JSON;
 import com.qkl.wallet.common.tools.IOCUtils;
 import com.qkl.wallet.common.walletUtil.LightWallet;
 import com.qkl.wallet.common.walletUtil.WalletUtils;
-import com.qkl.wallet.core.event.TokenTransferEvent;
 import com.qkl.wallet.core.event.TransferEvent;
-import com.qkl.wallet.core.transfer.OrderManage;
-import com.qkl.wallet.core.transfer.OrderModel;
-import com.qkl.wallet.core.transfer.work.WorkThread;
+import com.qkl.wallet.core.manage.OrderManage;
+import com.qkl.wallet.domain.OrderModel;
+import com.qkl.wallet.core.transfer.work.OrderWorkThread;
 import com.qkl.wallet.service.WalletService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -54,7 +52,7 @@ public class TransferEventListener {
             log.error("TransferEventListener ETH throw error. message:[{}]",e.getMessage());
             e.printStackTrace();
         }finally {
-            ((WorkThread)event.getSource()).play();
+            ((OrderWorkThread)event.getSource()).play();
         }
     }
 

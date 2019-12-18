@@ -5,7 +5,6 @@ import com.qkl.wallet.common.Const;
 import com.qkl.wallet.common.enumeration.ChainEnum;
 import com.qkl.wallet.common.enumeration.ExceptionEnum;
 import com.qkl.wallet.common.exception.BadRequestException;
-import com.qkl.wallet.common.tools.IOCUtils;
 import com.qkl.wallet.common.walletUtil.LightWallet;
 import com.qkl.wallet.common.walletUtil.WalletUtils;
 import com.qkl.wallet.common.walletUtil.outModel.WalletAddressInfo;
@@ -14,7 +13,7 @@ import com.qkl.wallet.config.TokenConfigs;
 import com.qkl.wallet.contract.IToken;
 import com.qkl.wallet.contract.Token;
 import com.qkl.wallet.core.ContractMapper;
-import com.qkl.wallet.core.transfer.OrderManage;
+import com.qkl.wallet.core.manage.OrderManage;
 import com.qkl.wallet.service.WalletService;
 import com.qkl.wallet.vo.in.BalanceParams;
 import com.qkl.wallet.vo.in.WithdrawParams;
@@ -310,6 +309,22 @@ public class WalletServiceImpl implements WalletService {
             for (TokenConfigs.TokenConfig.ChildToken childToken : childTokens) {
                 if(childToken.getToken_name().equals(tokenName)){
                     return childToken.getContract_address();
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public String foundPlatformTokenName(String contractAddress) {
+
+        List<TokenConfigs.TokenConfig> configs = tokenConfigs.getTokenConfigs();
+
+        for (TokenConfigs.TokenConfig config : configs) {
+            List<TokenConfigs.TokenConfig.ChildToken> childTokens = config.getChild_tokens();
+            for (TokenConfigs.TokenConfig.ChildToken childToken : childTokens) {
+                if(childToken.getContract_address().equals(contractAddress)){
+                    return childToken.getToken_name();
                 }
             }
         }

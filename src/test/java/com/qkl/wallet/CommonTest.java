@@ -130,4 +130,14 @@ public class CommonTest extends WalletApplicationTests {
             System.out.println(block.getRawResponse());
         });
     }
+
+    @Test
+    public void testGetBlockNumber() throws IOException {
+        System.out.println(WalletUtils.getCurrentBlockNumber());
+    }
+
+    @Test
+    public void testLastTimeBlockNumber(){
+        System.out.println(WalletUtils.getSyncBlockNumber(20L));
+    }
 }
