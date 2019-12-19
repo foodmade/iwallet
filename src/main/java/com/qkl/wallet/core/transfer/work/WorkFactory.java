@@ -21,7 +21,7 @@ public class WorkFactory {
      * @param eventEnum 线程事件枚举
      */
     public Optional<Thread> buildTokenThreadWork(String tokenName, TokenEventEnum eventEnum){
-        return Optional.of(new WorkThread(tokenName,eventEnum));
+        return Optional.of(new OrderWorkThread(tokenName,eventEnum));
     }
 
 }

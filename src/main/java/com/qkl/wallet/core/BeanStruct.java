@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.qkl.wallet.common.okHttp.HttpServiceEx;
 import com.qkl.wallet.common.tools.JsonReadUtils;
 import com.qkl.wallet.config.ApplicationConfig;
+import com.qkl.wallet.config.Config;
 import com.qkl.wallet.config.TokenConfigs;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +54,19 @@ public class BeanStruct {
             return tokenConfigs;
         } catch (IOException e) {
             log.error("Serious warning::::: \t Already found token json file. But read this file failed. throw error message:[{}]",e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
+    }
+
+    @Bean
+    public Config readConfigJsonConfig() throws IOException {
+        try {
+            Config config = JsonReadUtils.readJsonFromClassPath("config.json", Config.class);
+            log.info("Config json load successful. \n Config json:[{}]", JSON.toJSONString(config));
+            return config;
+        } catch (IOException e) {
+            log.error("Serious warning::::: \t Already found Config json file. But read this file failed. throw error message:[{}]",e.getMessage());
             e.printStackTrace();
             throw e;
         }

@@ -26,6 +26,21 @@ public class JedisKey {
     //主链币订单缓存key
     private static final String _CACHE_ORDER_CHAIN_KEY = "CHAIN";
 
+    //初始块高度
+    public static final String _BASIS_BLOCK_NUMBER = "_BASIS_BLOCK_NUMBER";
+
+    //项目基础配置文件
+    public static final String _BASIS_CONFIG = "_BASIS_CONFIG";
+
+    //最后一次同步的区块高度
+    public static final String _LAST_TIME_BLOCK_NUMBER = "_LAST_TIME_BLOCK_NUMBER";
+
+    //扫描区块确认数的hash队列
+    public static final String _CONFIRM_SCAN_QUEUE = "_CONFIRM_SCAN_QUEUE";
+
+    //交易的确认数详细信息缓存
+    public static final String _CONFIRM_HASH_INFO = "_CONFIRM_HASH_INFO";
+
     /**
      * Build wallet order cache key.
      */

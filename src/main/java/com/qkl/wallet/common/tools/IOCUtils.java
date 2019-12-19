@@ -2,7 +2,9 @@ package com.qkl.wallet.common.tools;
 
 import com.qkl.wallet.common.RedisUtil;
 import com.qkl.wallet.common.SpringContext;
+import com.qkl.wallet.config.Config;
 import com.qkl.wallet.service.WalletService;
+import org.web3j.protocol.Web3j;
 
 /**
  * @Author Jackies
@@ -19,4 +21,11 @@ public class IOCUtils {
         return SpringContext.getBean(RedisUtil.class);
     }
 
+    public static Web3j getWeb3j(){
+        return SpringContext.getBean(Web3j.class);
+    }
+
+    public static Config getConfig() {
+        return SpringContext.getBean(Config.class);
+    }
 }

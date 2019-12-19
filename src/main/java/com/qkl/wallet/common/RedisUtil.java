@@ -30,6 +30,10 @@ public class RedisUtil {
     private static final String SET_WITH_EXPIRE_TIME = "EX";
     private static final Long RELEASE_SUCCESS = 1L;
 
+    public RedisTemplate<String, String> getRedisTemplate() {
+        return redisTemplate;
+    }
+
     /**
      * 指定缓存失效时间
      * @param key 键

@@ -13,6 +13,7 @@ import org.reactivestreams.Subscription;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.TypeDecoder;
 import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.generated.Uint256;
@@ -20,11 +21,14 @@ import org.web3j.crypto.RawTransaction;
 import org.web3j.crypto.TransactionEncoder;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
+import org.web3j.protocol.core.DefaultBlockParameterNumber;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.tx.Contract;
 import org.web3j.utils.Numeric;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -103,5 +107,37 @@ public class CommonTest extends WalletApplicationTests {
         //0x1348ef18771Cc3e43296dD4DAE22720708680375
         String address = "0x8a5f7e444f0072b44198a8c32e5cc2c607c9a6a7"; //这里是我的item  key是JedisKey.buildWalletAddressKey()
         System.out.println( IOCUtils._Get_Redis().hHasKey(JedisKey.buildWalletAddressKey(),address));
+    }
+
+    @Test
+    public void decodeInput() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        String inputData = "0xb6ba5ae80000000000000000000000000000000000000000000000000000000000008481f8f559f96eeb8abed0de96155c3545855226d1b10b9a4a073360726c6615279c22ddafaf521412b39e3398371002be31620857ea0b5270601013b775e0cc6bad535f2a170585b35b606afff026dd5fbb3374b46e797a5808590602d1e662811f";
+        String method = inputData.substring(0, 10);
+        System.out.println(method);
+        String to = inputData.substring(10, 74);
+        String value = inputData.substring(74);
+        Method refMethod = TypeDecoder.class.getDeclaredMethod("decode", String.class, int.class, Class.class);
+        refMethod.setAccessible(true);
+        Address address = (Address) refMethod.invoke(null, to, 0, Address.class);
+        System.out.println(address.toString());
+        Uint256 amount = (Uint256) refMethod.invoke(null, value, 0, Uint256.class);
+        System.out.println(amount.getValue());
+    }
+
+    @Test
+    public void testSyncBlock(){
+        web3j.replayPastBlocksFlowable(new DefaultBlockParameterNumber(15516310),new DefaultBlockParameterNumber(15516320),true,true).subscribe(block -> {
+            System.out.println(block.getRawResponse());
+        });
+    }
+
+    @Test
+    public void testGetBlockNumber() throws IOException {
+        System.out.println(WalletUtils.getCurrentBlockNumber());
+    }
+
+    @Test
+    public void testLastTimeBlockNumber(){
+        System.out.println(WalletUtils.getSyncBlockNumber(20L));
     }
 }

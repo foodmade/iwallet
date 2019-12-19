@@ -2,9 +2,8 @@ package com.qkl.wallet.core.transfer.work;
 
 import com.qkl.wallet.common.SpringContext;
 import com.qkl.wallet.common.enumeration.TokenEventEnum;
-import com.qkl.wallet.core.event.TokenTransferEvent;
-import com.qkl.wallet.core.transfer.OrderManage;
-import com.qkl.wallet.core.transfer.OrderModel;
+import com.qkl.wallet.core.manage.OrderManage;
+import com.qkl.wallet.domain.OrderModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEvent;
 
@@ -13,10 +12,10 @@ import java.lang.reflect.Constructor;
 /**
  * @Author Jackies
  * @Date 2019/12/15 17:21
- * @Description TODO://
+ * @Description TODO:// 处理交易的工作线程
  **/
 @Slf4j
-public class WorkThread extends Thread {
+public class OrderWorkThread extends Thread {
 
     protected String tokenName;
 
@@ -24,7 +23,7 @@ public class WorkThread extends Thread {
 
     protected boolean isRunning = false;
 
-    public WorkThread(String tokenName, TokenEventEnum eventEnum) {
+    public OrderWorkThread(String tokenName, TokenEventEnum eventEnum) {
         this.tokenName = tokenName;
         this.event = eventEnum;
     }

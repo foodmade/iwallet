@@ -3,11 +3,13 @@ package com.qkl.wallet.core.event.listener;
 import com.qkl.wallet.common.Const;
 import com.qkl.wallet.common.walletUtil.WalletUtils;
 import com.qkl.wallet.core.event.TokenTransferEvent;
-import com.qkl.wallet.core.transfer.OrderManage;
-import com.qkl.wallet.core.transfer.OrderModel;
-import com.qkl.wallet.core.transfer.work.WorkThread;
+import com.qkl.wallet.core.manage.OrderManage;
+import com.qkl.wallet.domain.OrderModel;
+import com.qkl.wallet.core.transfer.work.OrderWorkThread;
 import com.qkl.wallet.domain.RawTransactionResEntity;
+import com.qkl.wallet.service.WalletService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
@@ -21,6 +23,8 @@ import java.math.BigDecimal;
 @Slf4j
 public class TokenTransferEventListener {
 
+    @Autowired
+    private WalletService walletService;
 
     @EventListener
     public void onApplicationEvent(TokenTransferEvent event) {
@@ -35,9 +39,6 @@ public class TokenTransferEventListener {
             String tokenName = orderModel.getTokenName();
             String fromAddress = orderModel.getFromAddress();
 
-            //同步交易转账
-//            WalletUtils.syncTransferToken(tokenName,toAddress,amount.toBigInteger(),trace);
-
             //离线交易转账
             RawTransactionResEntity entity = WalletUtils.offlineTransferToken(contractAddress,toAddress,amount.toBigInteger(),fromAddress);
             //将当前txHash缓存到redis,用于在充值回调的校验,区分是提现订单还是充值订单
@@ -49,7 +50,7 @@ public class TokenTransferEventListener {
             e.printStackTrace();
         }finally {
             //unlock work thread.
-            ((WorkThread)event.getSource()).play();
+            ((OrderWorkThread)event.getSource()).play();
         }
     }
 

@@ -69,6 +69,10 @@ public class WithdrawCallback {
      * 区块确认数
      */
     private Long confirmBlockNumber;
+    /**
+     * 交易状态
+     */
+    private Boolean status;
 
     public WithdrawCallback(String recepient, CallbackTypeEnum callbackTypeEnum) {
         this.recepient = recepient;

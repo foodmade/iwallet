@@ -100,6 +100,13 @@ public interface WalletService {
     String foundPlatformContractAddress(String tokenName);
 
     /**
+     * 通过合约地址获取代币名称
+     * @param contractAddress 合约地址
+     * @return 代币名称
+     */
+    String foundPlatformTokenName(String contractAddress);
+
+    /**
      * 通过代币名称获取对应的钱包秘钥
      */
     String foundTokenSecretKey(String chain);

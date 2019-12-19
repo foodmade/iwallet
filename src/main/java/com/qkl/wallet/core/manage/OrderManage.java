@@ -1,8 +1,9 @@
-package com.qkl.wallet.core.transfer;
+package com.qkl.wallet.core.manage;
 
 import com.alibaba.fastjson.JSON;
 import com.qkl.wallet.common.JedisKey;
 import com.qkl.wallet.common.tools.IOCUtils;
+import com.qkl.wallet.domain.OrderModel;
 import com.qkl.wallet.vo.in.WithdrawParams;
 import com.qkl.wallet.vo.in.WithdrawRequest;
 import lombok.extern.slf4j.Slf4j;

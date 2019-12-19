@@ -1,12 +1,11 @@
 package com.qkl.wallet.service.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.qkl.wallet.common.Const;
 import com.qkl.wallet.common.enumeration.CallbackTypeEnum;
 import com.qkl.wallet.common.enumeration.ExceptionEnum;
 import com.qkl.wallet.common.exception.BadRequestException;
 import com.qkl.wallet.common.walletUtil.WalletUtils;
-import com.qkl.wallet.core.transfer.OrderManage;
+import com.qkl.wallet.core.manage.OrderManage;
 import com.qkl.wallet.domain.ConfirmListenerEntity;
 import com.qkl.wallet.domain.EthTransactionReq;
 import com.qkl.wallet.domain.TransactionListenerEvent;
@@ -17,7 +16,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 
 /**
  * @Author Jackies
@@ -37,7 +35,7 @@ public class HubServiceImpl implements HubService {
         log.info("Received information from the order monitor.....");
         log.info("Detail info:{}", JSON.toJSONString(event));
         //判断是充值订单的回调还是提现订单的回调
-        CallbackTypeEnum callbackTypeEnum = judgeOrderType(event.getTransactionHash());
+        CallbackTypeEnum callbackTypeEnum = WalletUtils.judgeOrderType(event.getTransactionHash());
         log.info("Current order is [{}]",callbackTypeEnum.getDesc());
 
         //打包提交回业务服务器
@@ -81,7 +79,7 @@ public class HubServiceImpl implements HubService {
         log.info("ETH Received information from the order monitor.....");
         log.info("ETH Detail info:{}", JSON.toJSONString(ethTransactionReq));
         //判断是充值订单的回调还是提现订单的回调
-        CallbackTypeEnum callbackTypeEnum = judgeOrderType(ethTransactionReq.getHash());
+        CallbackTypeEnum callbackTypeEnum = WalletUtils.judgeOrderType(ethTransactionReq.getHash());
         log.info("ETH Current order is [{}]",callbackTypeEnum.getDesc());
 
         WithdrawCallback callback = new WithdrawCallback(callbackTypeEnum);
@@ -96,18 +94,4 @@ public class HubServiceImpl implements HubService {
         return true;
     }
 
-    /**
-     * 检查当前交易属于充值还是提现
-     */
-    private CallbackTypeEnum judgeOrderType(String transactionHash) {
-        if(StringUtils.isBlank(transactionHash)){
-            throw new BadRequestException(ExceptionEnum.PARAMS_MISS_ERR);
-        }
-
-        if(OrderManage.isWithdrawExist(transactionHash)){
-            return CallbackTypeEnum.WITHDRAW_TYPE;
-        }else{
-            return CallbackTypeEnum.RECHARGE_TYPE;
-        }
-    }
 }
