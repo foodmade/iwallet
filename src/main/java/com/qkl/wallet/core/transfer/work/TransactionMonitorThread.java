@@ -38,15 +38,22 @@ public class TransactionMonitorThread extends Thread{
     public void run() {
         log.info("Start Transaction monitor handler thread work.");
         while (true){
-            monitor();
-            sleep();
+            try {
+                monitor();
+                sleep();
+            }catch (Exception e){
+                log.error("Transaction monitor handler thread execute failed. throw message:[{}]",e.getMessage());
+                sleep();
+            }
         }
     }
 
     private void monitor() {
         try {
-            long currentBlockNumber = WalletUtils.getCurrentBlockNumber();
-
+            Long currentBlockNumber = WalletUtils.getCurrentBlockNumber();
+            if(currentBlockNumber == null){
+                return;
+            }
             Long lastBlockNumber = WalletUtils.getSyncBlockNumber(currentBlockNumber);
             if(lastBlockNumber == null){
                 log.warn("LastTimeBlockNumber is null. Please check redis config.");

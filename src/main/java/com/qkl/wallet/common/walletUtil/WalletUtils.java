@@ -15,10 +15,10 @@ import com.qkl.wallet.core.manage.OrderManage;
 import com.qkl.wallet.core.manage.ScriptManage;
 import com.qkl.wallet.domain.InputData;
 import com.qkl.wallet.domain.RawTransactionResEntity;
+import com.qkl.wallet.service.WalletService;
 import com.qkl.wallet.service.impl.EventService;
 import com.qkl.wallet.vo.in.WithdrawRequest;
 import com.qkl.wallet.vo.out.CreateWalletResponse;
-import jnr.ffi.annotations.In;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -33,18 +33,16 @@ import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
+import org.web3j.tx.gas.DefaultGasProvider;
 import org.web3j.utils.Numeric;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 /**
  * @Author Jackies
@@ -59,12 +57,13 @@ public class WalletUtils {
      * @param contractAddress   合约地址
      * @param toAddress         收款地址
      * @param amount            转账金额
-     * @param fromAddress       打款地址
      * @return 当前交易的nonce索引
      */
-    public static RawTransactionResEntity offlineTransferToken(String contractAddress, String toAddress, BigInteger amount, String fromAddress) throws ExecutionException, InterruptedException, IOException {
-        BigInteger GAS_PRICE = Contract.GAS_PRICE;
-        BigInteger GAS_LIMIT = Contract.GAS_LIMIT;
+    public static RawTransactionResEntity offlineTransferToken(String contractAddress, String toAddress, BigInteger amount) throws Exception {
+//        BigInteger GAS_PRICE =  SpringContext.getBean(WalletService.class).getEthGasResponse().getGas().toBigInteger();
+        BigInteger GAS_PRICE =  BigInteger.valueOf(10000000000L);
+        BigInteger GAS_LIMIT =  BigInteger.valueOf(54337);
+
 
         Function function = new Function(
                 "transfer",
@@ -72,7 +71,7 @@ public class WalletUtils {
                 Collections.emptyList());
 
         String encodedFunction = FunctionEncoder.encode(function);
-        BigInteger nonce = LightWallet.getNonce(fromAddress);
+        BigInteger nonce = new BigInteger(WalletUtils.getCurrentBlockNumber() + "");
 
         RawTransaction rawTransaction = RawTransaction.createTransaction(nonce,
                 GAS_PRICE,
@@ -89,6 +88,10 @@ public class WalletUtils {
         } catch (IOException e) {
             log.error("Offline transaction submission failed. ");
             throw e;
+        }
+        if(ethSendTransaction.getError() != null){
+            //说明提交失败
+            throw new Exception(ethSendTransaction.getError().getMessage());
         }
         log.info("SendTransaction token order successful. Response:[{}]", JSON.toJSONString(ethSendTransaction));
         return new RawTransactionResEntity(nonce,ethSendTransaction.getTransactionHash());
@@ -115,7 +118,7 @@ public class WalletUtils {
     public static void monitorNonceIsUpdate(BigInteger nonce, String fromAddress) {
         while (true){
             try {
-                BigInteger uNonce = LightWallet.getNonce(fromAddress);
+                BigInteger uNonce = new BigInteger(WalletUtils.getCurrentBlockNumber() + "");
                 if(!nonce.equals(uNonce)){
                     break;
                 }
@@ -173,7 +176,11 @@ public class WalletUtils {
     }
 
     public static BigDecimal unitCover(BigDecimal amount){
-        return amount.divide(new BigDecimal(Const._TOKEN_UNIT),18,BigDecimal.ROUND_DOWN);
+        return amount.divide(new BigDecimal(Const._TOKEN_UNIT),10,BigDecimal.ROUND_DOWN);
+    }
+
+    public static BigDecimal unitEthCover(BigInteger amount){
+        return new BigDecimal(amount).divide(new BigDecimal(Const._ETH_TOKEN_UNIT),18,BigDecimal.ROUND_DOWN);
     }
 
     /**
@@ -185,7 +192,7 @@ public class WalletUtils {
         } catch (IOException e) {
             log.error("获取以太坊最新区块高度失败,错误信息:[{}]",e.getMessage());
             e.printStackTrace();
-            throw e;
+            return null;
         }
     }
 

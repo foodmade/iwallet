@@ -1,0 +1,5 @@
+{
+  "delayBlockNumber": 20,
+  "BlockInterval": 5,
+  "confirmMaxCount": 20
+}

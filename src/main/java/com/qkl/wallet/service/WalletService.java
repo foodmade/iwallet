@@ -7,6 +7,7 @@ import com.qkl.wallet.vo.out.CreateWalletResponse;
 import com.qkl.wallet.vo.out.GasResponse;
 import com.qkl.wallet.vo.out.WithdrawResponse;
 import org.springframework.lang.NonNull;
+import org.web3j.protocol.core.methods.response.EthGasPrice;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -70,7 +71,12 @@ public interface WalletService {
     /**
      * 获取最新一笔交易的gas费用
      */
-    GasResponse getEthGas();
+    GasResponse getEthGasResponse();
+
+    /**
+     * 获取推荐燃油费
+     */
+    EthGasPrice getGasPrice();
 
     /**
      * 获取对应币种下的平台钱包余额

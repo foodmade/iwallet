@@ -1,6 +1,7 @@
 package com.qkl.wallet.controller;
 
 import com.qkl.wallet.common.Const;
+import com.qkl.wallet.common.walletUtil.WalletUtils;
 import com.qkl.wallet.contract.Usdt;
 import com.qkl.wallet.service.WalletService;
 import com.qkl.wallet.vo.ResultBean;
@@ -21,7 +22,6 @@ import org.web3j.tx.gas.DefaultGasProvider;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.HashMap;
 
@@ -99,7 +99,8 @@ public class WalletHome {
      */
     @PostMapping(value = "/get_eth_gas")
     public ResultBean<GasResponse> getEthGas(){
-        return ResultBean.success(walletService.getEthGas());
+        walletService.getEthGasResponse();
+        return ResultBean.success(walletService.getEthGasResponse());
     }
 
     /**

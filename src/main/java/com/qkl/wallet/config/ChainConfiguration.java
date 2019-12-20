@@ -1,6 +1,7 @@
 package com.qkl.wallet.config;
 
 import com.qkl.wallet.common.RedisUtil;
+import com.qkl.wallet.common.SpringContext;
 import com.qkl.wallet.common.enumeration.TokenEventEnum;
 import com.qkl.wallet.common.tools.ReflectionUtils;
 import com.qkl.wallet.common.walletUtil.LightWallet;
@@ -11,6 +12,7 @@ import com.qkl.wallet.core.transfer.work.WorkFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
@@ -45,7 +47,7 @@ public class ChainConfiguration {
     private RedisUtil redisUtil;
 
     @PostConstruct
-    public void initializationContractConfiguration() throws IOException {
+    public void initializationContractConfiguration() throws Exception {
         //初始化区块基数(这个块高度只会初始化一次,以后需要回查账本的时候,就使用此区块高度为起点)
         initializationStartBlockNumber();
 
@@ -61,10 +63,13 @@ public class ChainConfiguration {
         createContractWorkThread();
     }
 
-    private void initializationStartBlockNumber() throws IOException {
+    private void initializationStartBlockNumber() throws Exception {
         if(WalletUtils.getBasisBlockNumber() == null){
             //获取初始高度
             Long blockNumber = WalletUtils.getCurrentBlockNumber();
+            if(blockNumber == null){
+                throw new Exception("初始化区块基础高度失败,请重启服务器初始化");
+            }
             WalletUtils.generateBasisBlockNumber(blockNumber);
         }
     }

@@ -141,7 +141,7 @@ public class WalletServiceImpl implements WalletService {
     public BalanceResponse getETHBalance(@NonNull String address) {
         try {
             EthGetBalance balance = web3j.ethGetBalance(address, DefaultBlockParameter.valueOf("latest")).send();
-            return new BalanceResponse(WalletUtils.unitCover(balance.getBalance()));
+            return new BalanceResponse(WalletUtils.unitEthCover(balance.getBalance()));
         } catch (IOException e) {
             log.error("Query ETH balance throw error. >>> [{}]",e.getMessage());
             throw new BadRequestException(ExceptionEnum.BAD_REQUEST_ERR);
@@ -189,15 +189,24 @@ public class WalletServiceImpl implements WalletService {
     }
 
     @Override
-    public GasResponse getEthGas() {
+    public GasResponse getEthGasResponse() {
         EthGasPrice ethGasPrice;
         try {
-            ethGasPrice = web3j.ethGasPrice().sendAsync().get();
+            ethGasPrice = getGasPrice();
             log.info("获取到的gas:{}", ethGasPrice.getGasPrice());
             return new GasResponse(WalletUtils.unitCover(ethGasPrice.getGasPrice()));
         } catch (Exception e) {
             log.error("Get eth recent gas price throw error. message:[{}]",e.getMessage());
             throw new BadRequestException(e.getMessage());
+        }
+    }
+
+    public EthGasPrice getGasPrice() {
+        try {
+            return web3j.ethGasPrice().send();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
     }
 
@@ -323,7 +332,7 @@ public class WalletServiceImpl implements WalletService {
         for (TokenConfigs.TokenConfig config : configs) {
             List<TokenConfigs.TokenConfig.ChildToken> childTokens = config.getChild_tokens();
             for (TokenConfigs.TokenConfig.ChildToken childToken : childTokens) {
-                if(childToken.getContract_address().equals(contractAddress)){
+                if(childToken.getContract_address().toLowerCase().equals(contractAddress)){
                     return childToken.getToken_name();
                 }
             }

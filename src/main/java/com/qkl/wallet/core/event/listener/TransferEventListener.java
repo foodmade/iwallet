@@ -39,7 +39,7 @@ public class TransferEventListener {
             BigDecimal amount = orderModel.getWithdraw().getAmount();
             String secretKey = walletService.foundTokenSecretKey(fromAddress);
 
-            BigInteger nonce = LightWallet.getNonce(fromAddress);
+            BigInteger nonce = new BigInteger(WalletUtils.getCurrentBlockNumber() + "");
 
             Assert.notNull(secretKey,"ETH transfer kill. Because the platform wallet secretKey is empty");
             TransactionReceipt receipt = walletService.transferEth(fromAddress,toAddress,amount,secretKey);
