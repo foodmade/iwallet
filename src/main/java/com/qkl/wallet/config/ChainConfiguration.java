@@ -11,6 +11,7 @@ import com.qkl.wallet.core.transfer.work.TransactionMonitorThread;
 import com.qkl.wallet.core.transfer.work.WorkFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.annotation.Order;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -32,9 +33,9 @@ import java.util.concurrent.atomic.AtomicReference;
  * @Version 1.0.0
  * @Description <>
  **/
-@Order(10)
 @Component
 @Slf4j
+@DependsOn("redisUtil")
 public class ChainConfiguration {
 
     private static final String PREFIX = "CONTRACT_LINK_LOADER";
@@ -45,6 +46,8 @@ public class ChainConfiguration {
     private Web3j web3j;
     @Autowired
     private RedisUtil redisUtil;
+    @Autowired
+    private Config config;
 
     @PostConstruct
     public void initializationContractConfiguration() throws Exception {
@@ -57,14 +60,14 @@ public class ChainConfiguration {
         }
 
         //启动区块监听线程
-        new TransactionMonitorThread().start();
+        new TransactionMonitorThread(config).start();
 
         //创建已验证合法的合约加载器工作线程.
         createContractWorkThread();
     }
 
     private void initializationStartBlockNumber() throws Exception {
-        if(WalletUtils.getBasisBlockNumber() == null){
+        if(WalletUtils.getBasisBlockNumber(redisUtil) == null){
             //获取初始高度
             Long blockNumber = WalletUtils.getCurrentBlockNumber();
             if(blockNumber == null){
@@ -84,7 +87,7 @@ public class ChainConfiguration {
                 .contractTypeList()
                 .forEach(tokenName -> WorkFactory
                                     .build()
-                                    .buildTokenThreadWork(tokenName, TokenEventEnum.find(tokenName).get())
+                                    .buildTokenThreadWork(tokenName, TokenEventEnum.find(tokenName).get(),redisUtil)
                                     .ifPresent(Thread::start));
     }
 

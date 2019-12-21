@@ -27,6 +27,10 @@ public class TokenConfigs {
         private String secretKey;
 
         private List<ChildToken> child_tokens;
+        /**
+         * 小数位数
+         */
+        private Long decimals;
 
         @Data
         public static class ChildToken{
@@ -56,6 +60,10 @@ public class TokenConfigs {
              * 平台钱包地址
              */
             private String address;
+            /**
+             * 代币小数位数
+             */
+            private Long decimals;
         }
     }
 }

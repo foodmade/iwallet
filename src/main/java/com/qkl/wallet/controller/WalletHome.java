@@ -2,6 +2,7 @@ package com.qkl.wallet.controller;
 
 import com.qkl.wallet.common.Const;
 import com.qkl.wallet.common.walletUtil.WalletUtils;
+import com.qkl.wallet.contract.Token;
 import com.qkl.wallet.contract.Usdt;
 import com.qkl.wallet.service.WalletService;
 import com.qkl.wallet.vo.ResultBean;
@@ -109,8 +110,8 @@ public class WalletHome {
     @GetMapping(value = "deployContract")
     public ResultBean deployContract(@RequestParam String address,@RequestParam String type) throws Exception {
         Credentials credentials = Credentials.create(address);
-//        Token myToken = Token.deploy(web3j,credentials,new DefaultGasProvider(),BigInteger.valueOf(2500).multiply(Const._UNIT),type,type).send();
-        Usdt myToken = Usdt.deploy(web3j,credentials,new DefaultGasProvider(),BigInteger.valueOf(2500).multiply(Const._TOKEN_UNIT),type,type,BigInteger.valueOf(100)).send();
+        Token myToken = Token.deploy(web3j,credentials,new DefaultGasProvider(),BigInteger.valueOf(2500).multiply(Const._TOKEN_UNIT),type,type).send();
+//        Usdt myToken = Usdt.deploy(web3j,credentials,new DefaultGasProvider(),BigInteger.valueOf(2500).multiply(Const._TOKEN_UNIT),type,type,BigInteger.valueOf(100)).send();
         System.out.println("合约部署完毕 状态:" + myToken.isValid() + " 地址：" + myToken.getContractAddress());
         return ResultBean.success(null);
     }

@@ -3,6 +3,7 @@ package com.qkl.wallet.common.walletUtil;
 import com.alibaba.fastjson.JSON;
 import com.qkl.wallet.common.Const;
 import com.qkl.wallet.common.JedisKey;
+import com.qkl.wallet.common.RedisUtil;
 import com.qkl.wallet.common.SpringContext;
 import com.qkl.wallet.common.enumeration.CallbackTypeEnum;
 import com.qkl.wallet.common.enumeration.ExceptionEnum;
@@ -10,6 +11,7 @@ import com.qkl.wallet.common.exception.BadRequestException;
 import com.qkl.wallet.common.tools.IOCUtils;
 import com.qkl.wallet.common.tools.ReflectionUtils;
 import com.qkl.wallet.config.Config;
+import com.qkl.wallet.contract.Owc;
 import com.qkl.wallet.core.ContractMapper;
 import com.qkl.wallet.core.manage.OrderManage;
 import com.qkl.wallet.core.manage.ScriptManage;
@@ -24,16 +26,24 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.TypeDecoder;
+import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.generated.Uint256;
+import org.web3j.crypto.Credentials;
 import org.web3j.crypto.RawTransaction;
 import org.web3j.crypto.TransactionEncoder;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
+import org.web3j.protocol.core.methods.response.EthTransaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
+import org.web3j.tx.Transfer;
 import org.web3j.tx.gas.DefaultGasProvider;
+import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
 
 import java.io.IOException;
@@ -43,6 +53,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.concurrent.ExecutionException;
 
 /**
  * @Author Jackies
@@ -59,41 +70,50 @@ public class WalletUtils {
      * @param amount            转账金额
      * @return 当前交易的nonce索引
      */
-    public static RawTransactionResEntity offlineTransferToken(String contractAddress, String toAddress, BigInteger amount) throws Exception {
-//        BigInteger GAS_PRICE =  SpringContext.getBean(WalletService.class).getEthGasResponse().getGas().toBigInteger();
-        BigInteger GAS_PRICE =  BigInteger.valueOf(10000000000L);
-        BigInteger GAS_LIMIT =  BigInteger.valueOf(54337);
-
+    public static RawTransactionResEntity offlineTransferToken(String contractAddress, String toAddress, BigInteger amount,String fromAddress) throws Exception {
+//        BigInteger GAS_PRICE =  SpringContext.getBean(WalletService.class).getGasPrice().getGasPrice();
+        BigInteger GAS_PRICE =  Contract.GAS_PRICE;
+        BigInteger GAS_LIMIT =  BigInteger.valueOf(21000);
 
         Function function = new Function(
-                "transfer",
+                Owc.FUNC_TRANSFER,
                 Arrays.asList(new Address(toAddress), new Uint256(amount)),
                 Collections.emptyList());
 
         String encodedFunction = FunctionEncoder.encode(function);
-        BigInteger nonce = new BigInteger(WalletUtils.getCurrentBlockNumber() + "");
+        BigInteger nonce = WalletUtils.getNonce(fromAddress);
+
+        log.info("GAS_PRICE:[{}] GAS_LIMIT:[{}] nonce:[{}]",GAS_PRICE,GAS_LIMIT,nonce);
 
         RawTransaction rawTransaction = RawTransaction.createTransaction(nonce,
                 GAS_PRICE,
                 GAS_LIMIT,
                 contractAddress, encodedFunction);
 
+        Credentials credentials = LightWallet.buildDefaultCredentials();
+
         //签名Transaction，这里要对交易做签名
-        byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, LightWallet.buildDefaultCredentials());
+        byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, credentials);
+
         String hexValue = Numeric.toHexString(signMessage);
         //发送离线交易
         EthSendTransaction ethSendTransaction;
         try {
             ethSendTransaction = SpringContext.getBean(Web3j.class).ethSendRawTransaction(hexValue).send();
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("Offline transaction submission failed. ");
             throw e;
         }
+
+        boolean status = IOCUtils.getWalletService().validTransferStatus(ethSendTransaction.getTransactionHash());
+
         if(ethSendTransaction.getError() != null){
+            String message = (ethSendTransaction.getError() == null ? "订单交易状态显示失败" : ethSendTransaction.getError().getMessage());
+            log.error("SendTransaction token withdraw order failed. message:{}",message);
             //说明提交失败
-            throw new Exception(ethSendTransaction.getError().getMessage());
+            throw new Exception(message);
         }
-        log.info("SendTransaction token order successful. Response:[{}]", JSON.toJSONString(ethSendTransaction));
+        log.info("SendTransaction token order successful. status:[{}]. Response:[{}]",status, JSON.toJSONString(ethSendTransaction));
         return new RawTransactionResEntity(nonce,ethSendTransaction.getTransactionHash());
     }
 
@@ -118,11 +138,11 @@ public class WalletUtils {
     public static void monitorNonceIsUpdate(BigInteger nonce, String fromAddress) {
         while (true){
             try {
-                BigInteger uNonce = new BigInteger(WalletUtils.getCurrentBlockNumber() + "");
+                BigInteger uNonce = WalletUtils.getNonce(fromAddress);
                 if(!nonce.equals(uNonce)){
                     break;
                 }
-                log.debug("Current nonce:[{}] Chain block nonce:[{}]",nonce,uNonce);
+                log.info("Current nonce:[{}] Chain block nonce:[{}]",nonce,uNonce);
                 Thread.sleep(500);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -183,6 +203,23 @@ public class WalletUtils {
         return new BigDecimal(amount).divide(new BigDecimal(Const._ETH_TOKEN_UNIT),18,BigDecimal.ROUND_DOWN);
     }
 
+    public static BigDecimal unitCover(BigInteger amount,String tokenName){
+        return unitCover(new BigDecimal(amount),tokenName);
+    }
+
+    /**
+     * 会通过tokenName查找对应的单位进行转换
+     * @param amount  金额
+     * @param tokenName  代币名称
+     */
+    public static BigDecimal unitCover(BigDecimal amount,String tokenName){
+        if(tokenName == null){
+            return amount;
+        }
+        Long decimals = IOCUtils.getWalletService().foundDecimalsByTokenName(tokenName);
+        return amount.divide(new BigDecimal(decimals),8,BigDecimal.ROUND_DOWN);
+    }
+
     /**
      * 获取以太坊当前区块高度
      */
@@ -197,10 +234,26 @@ public class WalletUtils {
     }
 
     /**
+     * 获取交易随机数
+     */
+    public static BigInteger getNonce(String address){
+        EthGetTransactionCount ethGetTransactionCount = null;
+        try {
+            ethGetTransactionCount = IOCUtils.getWeb3j().ethGetTransactionCount(
+                    address, DefaultBlockParameterName.LATEST).sendAsync().get();
+            return ethGetTransactionCount.getTransactionCount();
+        } catch (Exception e) {
+            log.error("获取交易随机数(nonce)异常 message:{}",e.getMessage());
+            return null;
+        }
+
+    }
+
+    /**
      * 获取钱包服务初始区块高度
      */
-    public static BigInteger getBasisBlockNumber(){
-        Object val = IOCUtils._Get_Redis().get(JedisKey._BASIS_BLOCK_NUMBER);
+    public static BigInteger getBasisBlockNumber(RedisUtil redisUtil){
+        Object val = redisUtil.get(JedisKey._BASIS_BLOCK_NUMBER);
         return val == null ? null : new BigInteger(val + "");
     }
 
@@ -211,9 +264,9 @@ public class WalletUtils {
     /**
      * 初始化项目配置到redis
      */
-    public static void initBasisConfig(Config config) {
+    public static void initBasisConfig(Config config, RedisUtil redisUtil) {
         Assert.notNull(config,"项目基础配置文件存在异常,请检查");
-        IOCUtils._Get_Redis().set(JedisKey._BASIS_CONFIG,JSON.toJSONString(config));
+        redisUtil.set(JedisKey._BASIS_CONFIG,JSON.toJSONString(config));
     }
 
     /**

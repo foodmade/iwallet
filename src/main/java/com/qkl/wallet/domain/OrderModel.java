@@ -1,5 +1,6 @@
 package com.qkl.wallet.domain;
 
+import com.qkl.wallet.common.tools.IOCUtils;
 import com.qkl.wallet.vo.in.WithdrawRequest;
 import lombok.Data;
 import org.apache.http.client.utils.DateUtils;
@@ -29,6 +30,8 @@ public class OrderModel implements Serializable {
     protected String fromAddress;
     //合约地址
     protected String contractAddress;
+    //代币单位
+    protected Long decimals;
 
     public OrderModel(WithdrawRequest withdraw,String tokenName,String fromAddress,String contractAddress) {
         this.withdraw = withdraw;
@@ -37,6 +40,7 @@ public class OrderModel implements Serializable {
         this.contractAddress = contractAddress;
         this.time = DateUtils.formatDate(new Date());
         this.retry = 0;
+        this.decimals = IOCUtils.getWalletService().foundDecimalsByTokenName(tokenName);
     }
 
     public static List<OrderModel> buildModels(List<WithdrawRequest> withdrawRequests,String tokenName,String fromAddress,String contractAddress){

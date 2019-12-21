@@ -11,7 +11,8 @@ public enum TokenEventEnum {
     EBC("EBC",TokenTransferEvent.class),
     USDT("USDT(ERC20)", TokenTransferEvent.class),
     ETH("ETH", TransferEvent.class),
-    WVP("WVP", TokenTransferEvent.class);
+    WVP("WVP", TokenTransferEvent.class),
+    ECC("ECC", TokenTransferEvent.class);
 
     private String tokenName;
 

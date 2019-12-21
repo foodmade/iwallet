@@ -1,5 +1,6 @@
 package com.qkl.wallet.core.transfer.work;
 
+import com.qkl.wallet.common.RedisUtil;
 import com.qkl.wallet.common.SpringContext;
 import com.qkl.wallet.common.enumeration.TokenEventEnum;
 import com.qkl.wallet.core.manage.OrderManage;
@@ -23,13 +24,16 @@ public class OrderWorkThread extends Thread {
 
     protected boolean isRunning = false;
 
-    public OrderWorkThread(String tokenName, TokenEventEnum eventEnum) {
+    protected RedisUtil redisUtil;
+
+    public OrderWorkThread(String tokenName, TokenEventEnum eventEnum, RedisUtil redisUtil) {
         this.tokenName = tokenName;
         this.event = eventEnum;
+        this.redisUtil = redisUtil;
     }
 
     public OrderModel onProcess(){
-        return OrderManage.lpopOrderForEntity(tokenName, OrderModel.class);
+        return OrderManage.lpopOrderForEntity(redisUtil,tokenName, OrderModel.class);
     }
 
     public void sleep(){

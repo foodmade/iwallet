@@ -5,7 +5,7 @@ import com.qkl.wallet.common.Const;
 import com.qkl.wallet.common.JedisKey;
 import com.qkl.wallet.common.RedisUtil;
 import com.qkl.wallet.common.walletUtil.WalletUtils;
-import com.qkl.wallet.core.event.EthTransactionEvent;
+import com.qkl.wallet.core.event.MonitorTransactionEvent;
 import com.qkl.wallet.core.manage.OrderManage;
 import com.qkl.wallet.domain.Confirm;
 import com.qkl.wallet.domain.InputData;
@@ -20,11 +20,8 @@ import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterNumber;
 import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.EthBlock.TransactionResult;
-import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
-import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,7 +32,7 @@ import java.util.Optional;
  **/
 @Component
 @Slf4j
-public class EthTransactionEventListener {
+public class MonitorTransactionEventListener {
 
     @Autowired
     private Web3j web3j;
@@ -47,7 +44,7 @@ public class EthTransactionEventListener {
     private RedisUtil redisUtil;
 
     @EventListener
-    public void onApplicationEvent(EthTransactionEvent event) {
+    public void onApplicationEvent(MonitorTransactionEvent event) {
 
         Long startBlockNumber = event.getStartBlockNumber();
         Long endBlockNumber = event.getEndBlockNumber();
@@ -102,23 +99,6 @@ public class EthTransactionEventListener {
         }
     }
 
-    private boolean validTransferStatus(String hash) {
-
-        Optional<TransactionReceipt> optional;
-        try {
-            optional = web3j.ethGetTransactionReceipt(hash).send().getTransactionReceipt();
-            if(!optional.isPresent()){
-                return false;
-            }
-            String statusHex = optional.get().getStatus();
-            log.info("Status :[{}]",statusHex);
-            return Const._SUCCESS_HEX.equals(statusHex);
-        } catch (IOException e) {
-            log.error("Check for abnormal transaction status. message:{}",e.getMessage());
-            return false;
-        }
-    }
-
     private void tokenMonitorHandler(EthBlock.TransactionObject transactionObject) {
 
         InputData inputData;
@@ -130,7 +110,7 @@ public class EthTransactionEventListener {
             }
 
             //交易状态
-            boolean status = validTransferStatus(transactionObject.getHash());
+            boolean status = walletService.validTransferStatus(transactionObject.getHash());
 
             //解析合约地址,获取tokenName
             String contractAddress = transactionObject.getTo();
@@ -138,7 +118,7 @@ public class EthTransactionEventListener {
             log.info("Token transfer valid passed. \n tokenName:[{}] \n fromAddress:[{}] \n toAddress:[{}] \n amount:[{}] \n status:[{}] \n transaction detail:{}"
                     ,tokenName,transactionObject.getFrom(),inputData.getAddress(),inputData.getAmount(),status,JSON.toJSONString(transactionObject));
 
-            callbackServer(loadCallback(transactionObject,inputData.getAddress(),inputData.getAmount(),tokenName,status));
+            callbackServer(loadCallback(transactionObject,inputData.getAddress(),WalletUtils.unitCover(inputData.getAmount(),tokenName),tokenName,status));
             //创建确认区块数任务
             createConfirmBlockNumberTask(new Confirm(transactionObject.getHash(),transactionObject.getBlockNumber().longValue(),status));
         } catch (Exception e) {
@@ -151,20 +131,22 @@ public class EthTransactionEventListener {
             return;
         }
 
+        String eth = "ETH";
+
         //交易状态
-        boolean status = validTransferStatus(transactionObject.getHash());
+        boolean status = walletService.validTransferStatus(transactionObject.getHash());
 
         log.info("Eth transfer valid passed. \n tokenName:[ETH] \n fromAddress:[{}] \n toAddress:[{}] \n amount:[{}] status:[{}]",transactionObject.getFrom(),
                 transactionObject.getTo(),transactionObject.getValue(),status);
-        callbackServer(loadCallback(transactionObject,transactionObject.getTo(),transactionObject.getValue(),"ETH",status));
+        callbackServer(loadCallback(transactionObject,transactionObject.getTo(),WalletUtils.unitCover(transactionObject.getValue(),eth),eth,status));
         //创建确认区块数任务
         createConfirmBlockNumberTask(new Confirm(transactionObject.getHash(),transactionObject.getBlockNumber().longValue(),status));
     }
 
-    private WithdrawCallback loadCallback(EthBlock.TransactionObject event, String toAddress, BigInteger amount,String tokenName,Boolean status){
+    private WithdrawCallback loadCallback(EthBlock.TransactionObject event, String toAddress, BigDecimal amount,String tokenName,Boolean status){
         WithdrawCallback callback = new WithdrawCallback(WalletUtils.judgeOrderType(event.getHash()));
         callback.setTxnHash(event.getHash());
-        callback.setAmount(WalletUtils.unitCover(new BigDecimal(amount)) + "");
+        callback.setAmount(amount.toPlainString());
         callback.setSender(event.getFrom());
         callback.setRecepient(toAddress);
         callback.setTrace(OrderManage.getTraceId(event.getHash()));

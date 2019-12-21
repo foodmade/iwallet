@@ -11,13 +11,13 @@ import java.math.BigInteger;
  * @Description TODO://
  **/
 @Data
-public class EthTransactionEvent extends ApplicationEvent {
+public class MonitorTransactionEvent extends ApplicationEvent {
 
     private Long startBlockNumber;
 
     private Long endBlockNumber;
 
-    public EthTransactionEvent(Object source,Long startBlockNumber,Long endBlockNumber) {
+    public MonitorTransactionEvent(Object source, Long startBlockNumber, Long endBlockNumber) {
         super(source);
         this.startBlockNumber = startBlockNumber;
         this.endBlockNumber = endBlockNumber;

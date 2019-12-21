@@ -8,6 +8,7 @@ import com.qkl.wallet.vo.out.GasResponse;
 import com.qkl.wallet.vo.out.WithdrawResponse;
 import org.springframework.lang.NonNull;
 import org.web3j.protocol.core.methods.response.EthGasPrice;
+import org.web3j.protocol.core.methods.response.EthTransaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -117,5 +118,20 @@ public interface WalletService {
      */
     String foundTokenSecretKey(String chain);
 
+    /**
+     * 验证交易是否成功
+     * @param hash 交易hash
+     */
+    boolean validTransferStatus(String hash);
 
+    /**
+     * 获取交易信息 通过交易Hash
+     * @param hash 交易hash
+     */
+    EthTransaction fetchTransactionInfoByHash(String hash);
+
+    /**
+     * 通过币种获取对应的小数位数
+     */
+    Long foundDecimalsByTokenName(String tokenName);
 }

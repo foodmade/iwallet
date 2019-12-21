@@ -1,10 +1,9 @@
 package com.qkl.wallet.core.transfer.work;
 
 import com.qkl.wallet.common.SpringContext;
-import com.qkl.wallet.common.tools.IOCUtils;
 import com.qkl.wallet.common.walletUtil.WalletUtils;
 import com.qkl.wallet.config.Config;
-import com.qkl.wallet.core.event.EthTransactionEvent;
+import com.qkl.wallet.core.event.MonitorTransactionEvent;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -19,11 +18,14 @@ public class TransactionMonitorThread extends Thread{
 
     //线程名称
     private static final String threadName = "TransactionMonitorThread";
-    //获取区块延迟个数
-    private static Integer blockInterval = IOCUtils.getConfig().getBlockInterval();
 
-    public TransactionMonitorThread() {
+    //获取区块延迟个数
+    private Integer blockInterval;
+
+    public TransactionMonitorThread(Config config) {
         super(threadName);
+        this.blockInterval = config.getBlockInterval();
+
     }
 
     /**
@@ -69,7 +71,7 @@ public class TransactionMonitorThread extends Thread{
             }
             log.info("Fetch eth transaction order. \n currentBlockNumber:[{}] \n lastBlockNumber:[{}] \n endBlockNumber:[{}]",currentBlockNumber,lastBlockNumber,endBlockNumber);
             //执行区块同步逻辑,获取交易详情
-            SpringContext.getApplicationContext().publishEvent(new EthTransactionEvent(this,lastBlockNumber,endBlockNumber));
+            SpringContext.getApplicationContext().publishEvent(new MonitorTransactionEvent(this,lastBlockNumber,endBlockNumber));
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -32,6 +32,7 @@ import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.methods.response.EthGasPrice;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
+import org.web3j.protocol.core.methods.response.EthTransaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Transfer;
 import org.web3j.utils.Convert;
@@ -129,7 +130,7 @@ public class WalletServiceImpl implements WalletService {
             }
             //Load contract client.
             BigInteger balance = iToken.balanceOf(address).send();
-            return new BalanceResponse(WalletUtils.unitCover(balance));
+            return new BalanceResponse(WalletUtils.unitCover(balance,tokenType));
         }catch (Exception e){
             log.error("Query contract address balance throw error. >>> [{}]",e.getMessage());
             throw new BadRequestException(e.getMessage());
@@ -177,7 +178,7 @@ public class WalletServiceImpl implements WalletService {
         try {
             TransactionReceipt transactionReceipt = Transfer.sendFunds(
                     web3j, credentials, toAddress,
-                    amount.multiply(new BigDecimal(Const._TOKEN_UNIT)), Convert.Unit.WEI).send();
+                    amount.multiply(new BigDecimal(Const._ETH_TOKEN_UNIT)), Convert.Unit.WEI).send();
             log.info("Eth transfer successful. transactionReceipt:{}",JSON.toJSONString(transactionReceipt));
             return transactionReceipt;
         } catch (Exception e) {
@@ -349,4 +350,48 @@ public class WalletServiceImpl implements WalletService {
         System.out.println(System.getProperty("user.dir"));
     }
 
+    public boolean validTransferStatus(String hash) {
+
+        Optional<TransactionReceipt> optional;
+        try {
+            optional = web3j.ethGetTransactionReceipt(hash).send().getTransactionReceipt();
+            if(!optional.isPresent()){
+                return false;
+            }
+            String statusHex = optional.get().getStatus();
+            log.info("Status :[{}]",statusHex);
+            return Const._SUCCESS_HEX.equals(statusHex);
+        } catch (IOException e) {
+            log.error("Check for abnormal transaction status. message:{}",e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    public EthTransaction fetchTransactionInfoByHash(String hash) {
+        try {
+            return web3j.ethGetTransactionByHash(hash).send();
+        } catch (IOException e) {
+            log.error("Fetch transaction detail info throw error:[{}]",e.getMessage());
+            return null;
+        }
+    }
+
+    @Override
+    public Long foundDecimalsByTokenName(String tokenName) {
+        List<TokenConfigs.TokenConfig> configs = tokenConfigs.getTokenConfigs();
+
+        for (TokenConfigs.TokenConfig config : configs) {
+            if(config.getToken_type().equals(tokenName)){
+                return config.getDecimals();
+            }
+            List<TokenConfigs.TokenConfig.ChildToken> childTokens = config.getChild_tokens();
+            for (TokenConfigs.TokenConfig.ChildToken childToken : childTokens) {
+                if(childToken.getToken_name().equals(tokenName)){
+                    return childToken.getDecimals();
+                }
+            }
+        }
+        return null;
+    }
 }

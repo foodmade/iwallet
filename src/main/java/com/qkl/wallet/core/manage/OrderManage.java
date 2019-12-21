@@ -2,6 +2,7 @@ package com.qkl.wallet.core.manage;
 
 import com.alibaba.fastjson.JSON;
 import com.qkl.wallet.common.JedisKey;
+import com.qkl.wallet.common.RedisUtil;
 import com.qkl.wallet.common.tools.IOCUtils;
 import com.qkl.wallet.domain.OrderModel;
 import com.qkl.wallet.vo.in.WithdrawParams;
@@ -83,9 +84,8 @@ public class OrderManage {
      * @param cls    需要转换的实体类型
      * @param <T>    类型定义
      */
-    public static <T> T lpopOrderForEntity(String token, Class<T> cls){
-        Object val = IOCUtils._Get_Redis()
-                .lpopOne(JedisKey.buildTokenOrderKey(token));
+    public static <T> T lpopOrderForEntity(RedisUtil redisUtil,String token, Class<T> cls){
+        Object val = redisUtil.lpopOne(JedisKey.buildTokenOrderKey(token));
         if(val == null){
             return null;
         }

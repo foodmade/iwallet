@@ -81,7 +81,7 @@ public class LightWallet {
      * 加载默认钱包证书
      */
     public static Credentials buildDefaultCredentials(){
-        log.debug("使用默认钱包秘钥生成证书:[{}]",ApplicationConfig.secretKey);
+        log.info("使用默认钱包秘钥生成证书:[{}]",ApplicationConfig.secretKey);
         return buildCredentials(ApplicationConfig.secretKey);
     }
 
