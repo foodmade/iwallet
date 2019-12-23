@@ -28,7 +28,7 @@ import java.math.BigDecimal;
  **/
 @Component
 @Slf4j
-public class TokenTransferEventListener {
+public class TokenTransferEventListener extends Listener{
 
     @Autowired
     private WalletService walletService;
@@ -51,7 +51,7 @@ public class TokenTransferEventListener {
             RawTransactionResEntity entity = WalletUtils.offlineTransferToken(contractAddress,toAddress,amount.toBigInteger(),fromAddress);
 
             //将当前txHash缓存到redis,用于在充值回调的校验,区分是提现订单还是充值订单
-            OrderManage.addWithdrawTxHashNumber(entity.getTransactionHash(),trace);
+            OrderManage.addWithdrawTxHashNumber(entity.getTransactionHash(),JSON.toJSONString(loadBaseOrder(trace,orderModel.getTxnType())));
             //由于区块链的转账规则,每次交易的nonce随机数必须是递增并且不一致的随机数,所以,这里需要等待区块链处理完毕并且更新nonce才能继续处理下一笔订单
             WalletUtils.monitorNonceIsUpdate(entity.getNonce(),fromAddress);
         } catch (Exception e) {
@@ -63,16 +63,4 @@ public class TokenTransferEventListener {
             ((OrderWorkThread)event.getSource()).play();
         }
     }
-
-    private void callbackErrMessage(OrderModel orderModel,String errMessage) {
-        WithdrawCallback callback = new WithdrawCallback(CallbackTypeEnum.WITHDRAW_TYPE);
-        callback.setStatus(false);
-        callback.setMessage(errMessage);
-        callback.setTrace(orderModel.getWithdraw().getTrace());
-        callback.setTokenName(orderModel.getTokenName());
-        callback.setAmount(orderModel.getWithdraw().getAmount().toPlainString());
-        eventService.addSuccessEvent(callback);
-    }
-
-
 }

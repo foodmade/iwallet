@@ -94,6 +94,14 @@ public class WalletHome {
         return ResultBean.success(walletService.transferEth(ethTransferParams.getFromAddress(),ethTransferParams.getToAddress(),ethTransferParams.getAmount()));
     }
 
+    /**
+     * 以太币之间的转账(异步方式)
+     */
+    @PostMapping(value = "/eth_transfer_async")
+    public ResultBean<Boolean> eth_transfer_async(@RequestBody @Valid EthTransferParams ethTransferParams){
+        return ResultBean.success(walletService.transferEth(ethTransferParams));
+    }
+
 
     /**
      * 获取推荐燃油费

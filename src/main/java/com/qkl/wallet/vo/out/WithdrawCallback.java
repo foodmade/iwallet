@@ -21,7 +21,8 @@ public class WithdrawCallback {
     private String _id;
 
     /**
-     * 交易类型（ D - 存款）(W - 提款)
+     * {@link com.qkl.wallet.common.enumeration.CallbackTypeEnum}
+     * 交易类型（ D - 存款）(W - 提款) (IN - 划入) (OUT - 划出)
      */
     private String txnType;
 
@@ -81,5 +82,8 @@ public class WithdrawCallback {
 
     public WithdrawCallback(CallbackTypeEnum callbackTypeEnum) {
         this.txnType = callbackTypeEnum.getType();
+    }
+
+    public WithdrawCallback() {
     }
 }

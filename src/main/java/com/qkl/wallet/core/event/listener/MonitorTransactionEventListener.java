@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.qkl.wallet.common.Const;
 import com.qkl.wallet.common.JedisKey;
 import com.qkl.wallet.common.RedisUtil;
+import com.qkl.wallet.common.exception.BadRequestException;
 import com.qkl.wallet.common.walletUtil.WalletUtils;
 import com.qkl.wallet.core.event.MonitorTransactionEvent;
 import com.qkl.wallet.core.manage.OrderManage;
@@ -11,6 +12,7 @@ import com.qkl.wallet.domain.Confirm;
 import com.qkl.wallet.domain.InputData;
 import com.qkl.wallet.service.WalletService;
 import com.qkl.wallet.service.impl.EventService;
+import com.qkl.wallet.vo.OrderBaseInfo;
 import com.qkl.wallet.vo.out.WithdrawCallback;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -144,12 +146,17 @@ public class MonitorTransactionEventListener {
     }
 
     private WithdrawCallback loadCallback(EthBlock.TransactionObject event, String toAddress, BigDecimal amount,String tokenName,Boolean status){
-        WithdrawCallback callback = new WithdrawCallback(WalletUtils.judgeOrderType(event.getHash()));
+        WithdrawCallback callback = new WithdrawCallback();
+
+        OrderBaseInfo orderBaseInfo = OrderManage.getOrderModelByTxHash(event.getHash());
+        if(orderBaseInfo == null) throw new BadRequestException("异常的txHash,因为在redis中不存在此订单信息");
+
         callback.setTxnHash(event.getHash());
         callback.setAmount(amount.toPlainString());
         callback.setSender(event.getFrom());
         callback.setRecepient(toAddress);
-        callback.setTrace(OrderManage.getTraceId(event.getHash()));
+        callback.setTrace(orderBaseInfo.getTraceId());
+        callback.setTxnType(orderBaseInfo.getTxnType());
         callback.setTokenName(tokenName);
         callback.setStatus(status);
         callback.setGas(event.getGas().toString());

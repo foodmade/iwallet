@@ -32,8 +32,10 @@ public class OrderModel implements Serializable {
     protected String contractAddress;
     //代币单位
     protected Long decimals;
+    //交易类型
+    protected String txnType;
 
-    public OrderModel(WithdrawRequest withdraw,String tokenName,String fromAddress,String contractAddress) {
+    public OrderModel(WithdrawRequest withdraw,String tokenName,String fromAddress,String contractAddress,String txnType) {
         this.withdraw = withdraw;
         this.tokenName = tokenName;
         this.fromAddress = fromAddress;
@@ -41,10 +43,6 @@ public class OrderModel implements Serializable {
         this.time = DateUtils.formatDate(new Date());
         this.retry = 0;
         this.decimals = IOCUtils.getWalletService().foundDecimalsByTokenName(tokenName);
-    }
-
-    public static List<OrderModel> buildModels(List<WithdrawRequest> withdrawRequests,String tokenName,String fromAddress,String contractAddress){
-        return withdrawRequests.parallelStream()
-                .map(withdraw -> new OrderModel(withdraw,tokenName,fromAddress,contractAddress)).collect(Collectors.toList());
+        this.txnType = txnType;
     }
 }

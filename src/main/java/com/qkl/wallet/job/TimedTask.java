@@ -45,6 +45,10 @@ public class TimedTask {
                 return;
             }
             Long currentBlockNumber = WalletUtils.getCurrentBlockNumber();
+            if(currentBlockNumber == null) {
+                log.info("Fetch current chain block number is empty,Skip ......");
+                return;
+            }
             Confirm confirm;
             for (String hash : allHash) {
                 confirm = getHashConfirm(hash);

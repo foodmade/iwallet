@@ -1,5 +1,6 @@
 package com.qkl.wallet.core.event.listener;
 
+import com.alibaba.fastjson.JSON;
 import com.qkl.wallet.common.tools.IOCUtils;
 import com.qkl.wallet.common.walletUtil.LightWallet;
 import com.qkl.wallet.common.walletUtil.WalletUtils;
@@ -24,12 +25,12 @@ import java.math.BigInteger;
  **/
 @Component
 @Slf4j
-public class TransferEventListener {
+public class TransferEventListener extends Listener{
 
     @EventListener
     public void onApplicationEvent(TransferEvent event) {
+        OrderModel orderModel = event.getOrder();
         try {
-            OrderModel orderModel = event.getOrder();
             WalletService walletService = IOCUtils.getWalletService();
             log.info("TransferEventListener process message. TokenName:[{}] to:[{}] trace:[{}]",
                     orderModel.getTokenName(),orderModel.getWithdraw().getAddress(),orderModel.getWithdraw().getTrace());
@@ -38,6 +39,7 @@ public class TransferEventListener {
             String fromAddress = orderModel.getFromAddress();
             BigDecimal amount = orderModel.getWithdraw().getAmount();
             String secretKey = walletService.foundTokenSecretKey(fromAddress);
+            String trace = orderModel.getWithdraw().getTrace();
 
             BigInteger nonce = WalletUtils.getNonce(fromAddress);
 
@@ -45,11 +47,12 @@ public class TransferEventListener {
             TransactionReceipt receipt = walletService.transferEth(fromAddress,toAddress,amount,secretKey);
 
             log.info("Eth transfer successful. Receipt transactionHash:[{}]",receipt.getTransactionHash());
-            OrderManage.addWithdrawTxHashNumber(receipt.getTransactionHash(),orderModel.getWithdraw().getTrace());
+            OrderManage.addWithdrawTxHashNumber(receipt.getTransactionHash(),JSON.toJSONString(loadBaseOrder(trace,orderModel.getTxnType())));
             //nonce随机数检测
             WalletUtils.monitorNonceIsUpdate(nonce,fromAddress);
         }catch (Exception e){
             log.error("TransferEventListener ETH throw error. message:[{}]",e.getMessage());
+            callbackErrMessage(orderModel,e.getMessage());
             e.printStackTrace();
         }finally {
             ((OrderWorkThread)event.getSource()).play();

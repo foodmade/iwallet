@@ -351,7 +351,6 @@ public class WalletUtils {
         if(org.apache.commons.lang3.StringUtils.isBlank(transactionHash)){
             throw new BadRequestException(ExceptionEnum.PARAMS_MISS_ERR);
         }
-
         if(OrderManage.isWithdrawExist(transactionHash)){
             return CallbackTypeEnum.WITHDRAW_TYPE;
         }else{
