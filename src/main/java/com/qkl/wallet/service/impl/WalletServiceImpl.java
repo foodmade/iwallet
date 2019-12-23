@@ -172,6 +172,8 @@ public class WalletServiceImpl implements WalletService {
         //Valid system wallet account balance is it enough.
         BigDecimal systemWalletBalance = getETHBalance(fromAddress).getBalance();
 
+        log.info("ETH transferEth function process........................");
+
         Assert.isTrue(amount.compareTo(systemWalletBalance) < 0,"Insufficient available balance in system account");
 
         Credentials credentials = LightWallet.buildCredentials(secretKey);

@@ -1,7 +1,4 @@
 package com.qkl.wallet.core.event.listener;
-
-import com.alibaba.fastjson.JSON;
-import com.qkl.wallet.common.Const;
 import com.qkl.wallet.common.enumeration.CallbackTypeEnum;
 import com.qkl.wallet.common.walletUtil.WalletUtils;
 import com.qkl.wallet.core.event.TokenTransferEvent;
@@ -11,13 +8,11 @@ import com.qkl.wallet.core.transfer.work.OrderWorkThread;
 import com.qkl.wallet.domain.RawTransactionResEntity;
 import com.qkl.wallet.service.WalletService;
 import com.qkl.wallet.service.impl.EventService;
-import com.qkl.wallet.vo.out.BalanceResponse;
 import com.qkl.wallet.vo.out.WithdrawCallback;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import org.web3j.protocol.core.methods.response.EthTransaction;
 
 import java.math.BigDecimal;
 

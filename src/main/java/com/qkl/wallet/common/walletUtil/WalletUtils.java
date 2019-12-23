@@ -73,7 +73,8 @@ public class WalletUtils {
     public static RawTransactionResEntity offlineTransferToken(String contractAddress, String toAddress, BigInteger amount,String fromAddress) throws Exception {
 //        BigInteger GAS_PRICE =  SpringContext.getBean(WalletService.class).getGasPrice().getGasPrice();
         BigInteger GAS_PRICE =  Contract.GAS_PRICE;
-        BigInteger GAS_LIMIT =  BigInteger.valueOf(21000);
+//        BigInteger GAS_LIMIT =  Contract.GAS_LIMIT;
+        BigInteger GAS_LIMIT =  BigInteger.valueOf(42000);
 
         Function function = new Function(
                 Owc.FUNC_TRANSFER,
@@ -83,7 +84,9 @@ public class WalletUtils {
         String encodedFunction = FunctionEncoder.encode(function);
         BigInteger nonce = WalletUtils.getNonce(fromAddress);
 
-        log.info("GAS_PRICE:[{}] GAS_LIMIT:[{}] nonce:[{}]",GAS_PRICE,GAS_LIMIT,nonce);
+        BigDecimal then = WalletUtils.unitEthCover(GAS_LIMIT.multiply(GAS_PRICE));
+
+        log.info("GAS_PRICE:[{}] GAS_LIMIT:[{}] GAS_TOTAL:[{}] nonce:[{}]",GAS_PRICE,GAS_LIMIT,then,nonce);
 
         RawTransaction rawTransaction = RawTransaction.createTransaction(nonce,
                 GAS_PRICE,
@@ -107,7 +110,7 @@ public class WalletUtils {
 
         boolean status = IOCUtils.getWalletService().validTransferStatus(ethSendTransaction.getTransactionHash());
 
-        if(ethSendTransaction.getError() != null){
+        if(ethSendTransaction.getTransactionHash() == null){
             String message = (ethSendTransaction.getError() == null ? "订单交易状态显示失败" : ethSendTransaction.getError().getMessage());
             log.error("SendTransaction token withdraw order failed. message:{}",message);
             //说明提交失败
@@ -237,11 +240,12 @@ public class WalletUtils {
      * 获取交易随机数
      */
     public static BigInteger getNonce(String address){
-        EthGetTransactionCount ethGetTransactionCount = null;
+        EthGetTransactionCount ethGetTransactionCount;
         try {
             ethGetTransactionCount = IOCUtils.getWeb3j().ethGetTransactionCount(
                     address, DefaultBlockParameterName.LATEST).sendAsync().get();
-            return ethGetTransactionCount.getTransactionCount();
+            BigInteger nonce = ethGetTransactionCount.getTransactionCount();
+            return nonce.compareTo(BigInteger.ZERO) == 0 ? new BigInteger("1") : nonce;
         } catch (Exception e) {
             log.error("获取交易随机数(nonce)异常 message:{}",e.getMessage());
             return null;
