@@ -21,4 +21,8 @@ public class EthTransferParams {
     private BigDecimal amount;
 
     private String fromAddress;
+    /**
+     * 追踪ID
+     */
+    private String trace;
 }

@@ -1,6 +1,7 @@
 package com.qkl.wallet.service;
 
 import com.qkl.wallet.vo.in.BalanceParams;
+import com.qkl.wallet.vo.in.EthTransferParams;
 import com.qkl.wallet.vo.in.WithdrawParams;
 import com.qkl.wallet.vo.out.BalanceResponse;
 import com.qkl.wallet.vo.out.CreateWalletResponse;
@@ -68,6 +69,13 @@ public interface WalletService {
      * @param secretKey     打款钱包秘钥
      */
     TransactionReceipt transferEth(String fromAddress, String toAddress, BigDecimal amount, String secretKey);
+
+    /**
+     * 以太币之间的转账,使用任务队列方式执行
+     * 这个转账优先级默认最高,加入后会放到队列头
+     * @param ethTransferParams 转账参数
+     */
+    Boolean transferEth(EthTransferParams ethTransferParams);
 
     /**
      * 获取最新一笔交易的gas费用

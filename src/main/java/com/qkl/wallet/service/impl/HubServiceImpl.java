@@ -2,8 +2,6 @@ package com.qkl.wallet.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.qkl.wallet.common.enumeration.CallbackTypeEnum;
-import com.qkl.wallet.common.enumeration.ExceptionEnum;
-import com.qkl.wallet.common.exception.BadRequestException;
 import com.qkl.wallet.common.walletUtil.WalletUtils;
 import com.qkl.wallet.core.manage.OrderManage;
 import com.qkl.wallet.domain.ConfirmListenerEntity;
@@ -12,7 +10,6 @@ import com.qkl.wallet.domain.TransactionListenerEvent;
 import com.qkl.wallet.service.HubService;
 import com.qkl.wallet.vo.out.WithdrawCallback;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
@@ -45,8 +42,9 @@ public class HubServiceImpl implements HubService {
         callback.setSender(event.getReturnValues().getFrom());
         callback.setRecepient(event.getReturnValues().getTo());
         callback.set_id(event.getId());
-        callback.setTrace(OrderManage.getTraceId(event.getTransactionHash()));
+        callback.setTrace(OrderManage.getOrderTraceId(event.getTransactionHash()));
         callback.setTokenName(event.getTokenName());
+        callback.setTxnType(OrderManage.getOrderTxnType(event.getTransactionHash()));
         eventService.addSuccessEvent(callback);
         return true;
     }
@@ -88,7 +86,7 @@ public class HubServiceImpl implements HubService {
         callback.setGas(ethTransactionReq.getGas());
         callback.setRecepient(ethTransactionReq.getTo());
         callback.setAmount(WalletUtils.unitCover(ethTransactionReq.getValue()) + "");
-        callback.setTrace(OrderManage.getTraceId(ethTransactionReq.getHash()));
+        callback.setTrace(OrderManage.getOrderTraceId(ethTransactionReq.getHash()));
         callback.setTokenName(ethTransactionReq.getTokenName());
         eventService.addSuccessEvent(callback);
         return true;

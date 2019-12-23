@@ -2,6 +2,7 @@ package com.qkl.wallet.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.qkl.wallet.common.Const;
+import com.qkl.wallet.common.enumeration.CallbackTypeEnum;
 import com.qkl.wallet.common.enumeration.ChainEnum;
 import com.qkl.wallet.common.enumeration.ExceptionEnum;
 import com.qkl.wallet.common.exception.BadRequestException;
@@ -16,6 +17,7 @@ import com.qkl.wallet.core.ContractMapper;
 import com.qkl.wallet.core.manage.OrderManage;
 import com.qkl.wallet.service.WalletService;
 import com.qkl.wallet.vo.in.BalanceParams;
+import com.qkl.wallet.vo.in.EthTransferParams;
 import com.qkl.wallet.vo.in.WithdrawParams;
 import com.qkl.wallet.vo.in.WithdrawRequest;
 import com.qkl.wallet.vo.out.BalanceResponse;
@@ -41,6 +43,8 @@ import org.web3j.utils.Numeric;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -81,6 +85,10 @@ public class WalletServiceImpl implements WalletService {
     @Override
     public WithdrawResponse withdraw(WithdrawParams params) throws IOException {
 
+        if(!CallbackTypeEnum.find(params.getTxnType()).isPresent()){
+            throw new BadRequestException("异常的txnType类型");
+        }
+
         if(!validOrderRequest(params)){
             log.info("The order does not meet the conditions, and all the orders have been rejected");
             throw new BadRequestException("存在不满足条件的订单,请检查");
@@ -94,6 +102,24 @@ public class WalletServiceImpl implements WalletService {
             OrderManage.addTokenOrder(params);
         }
         return new WithdrawResponse("");
+    }
+
+    @Override
+    public Boolean transferEth(EthTransferParams ethTransferParams) {
+        //组装任务参数,添加至任务队列,统一使用监听器执行模式
+        WithdrawParams params = assemblyWithdrawModel(ethTransferParams);
+        OrderManage.addChainOrder(params);
+        return true;
+    }
+
+    private WithdrawParams assemblyWithdrawModel(EthTransferParams ethTransferParams) {
+        WithdrawParams params = new WithdrawParams();
+        params.setChain(ChainEnum.ETH.getChainName());
+        params.setTokenName(null);
+
+        WithdrawRequest request = new WithdrawRequest(ethTransferParams.getToAddress(),ethTransferParams.getAmount(),ethTransferParams.getTrace());
+        params.setRequest(Collections.singletonList(request));
+        return params;
     }
 
 
