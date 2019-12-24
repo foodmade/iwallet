@@ -8,7 +8,8 @@ public enum CallbackTypeEnum {
     RECHARGE_TYPE("D","充值回调"),
     CONFIRM_TYPE("C","区块确认"),
     DRAW_IN("IN","划入"),
-    DRAW_OUT("OUT","划出");
+    DRAW_OUT("OUT","划出"),
+    DRAW_TYPE("DRAW","划转");
 
     private String type;
 

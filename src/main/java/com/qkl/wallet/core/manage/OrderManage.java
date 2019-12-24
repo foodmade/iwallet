@@ -1,8 +1,8 @@
 package com.qkl.wallet.core.manage;
 
 import com.alibaba.fastjson.JSON;
-import com.qkl.wallet.common.JedisKey;
-import com.qkl.wallet.common.RedisUtil;
+import com.qkl.wallet.common.cache.JedisKey;
+import com.qkl.wallet.common.cache.RedisUtil;
 import com.qkl.wallet.common.tools.IOCUtils;
 import com.qkl.wallet.domain.OrderModel;
 import com.qkl.wallet.vo.OrderBaseInfo;
@@ -64,7 +64,7 @@ public class OrderManage {
      * @param withdraw   订单基本信息
      * @param tokenName  主币名称
      */
-    public static void addChainOrder(WithdrawRequest withdraw, String txnType ,String tokenName,String fromAddress){
+    public static void addChainOrder(WithdrawRequest withdraw,String tokenName,String txnType,String fromAddress){
         log.info("Add a new [chain] withdraw order. TokenName:[{}] orderInfo:[{}]",tokenName,JSON.toJSONString(withdraw));
         IOCUtils._Get_Redis().lpushOne(JedisKey.buildTokenOrderKey(tokenName),JSON.toJSONString(new OrderModel(withdraw,tokenName,fromAddress,null,txnType)));
         log.info("add [chain] withdraw successful.");

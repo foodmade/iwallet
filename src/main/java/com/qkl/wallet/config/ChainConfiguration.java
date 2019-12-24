@@ -1,7 +1,6 @@
 package com.qkl.wallet.config;
 
-import com.qkl.wallet.common.RedisUtil;
-import com.qkl.wallet.common.SpringContext;
+import com.qkl.wallet.common.cache.RedisUtil;
 import com.qkl.wallet.common.enumeration.TokenEventEnum;
 import com.qkl.wallet.common.tools.ReflectionUtils;
 import com.qkl.wallet.common.walletUtil.LightWallet;
@@ -12,8 +11,6 @@ import com.qkl.wallet.core.transfer.work.WorkFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.DependsOn;
-import org.springframework.core.annotation.Order;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
@@ -21,9 +18,7 @@ import org.web3j.tx.gas.ContractGasProvider;
 import org.web3j.tx.gas.DefaultGasProvider;
 
 import javax.annotation.PostConstruct;
-import java.io.IOException;
 import java.lang.reflect.Method;
-import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 

@@ -2,14 +2,13 @@ package com.qkl.wallet;
 
 import com.alibaba.fastjson.JSON;
 import com.qkl.wallet.common.Const;
-import com.qkl.wallet.common.JedisKey;
+import com.qkl.wallet.common.cache.JedisKey;
 import com.qkl.wallet.common.SpringContext;
 import com.qkl.wallet.common.tools.IOCUtils;
 import com.qkl.wallet.common.walletUtil.LightWallet;
 import com.qkl.wallet.common.walletUtil.WalletUtils;
 import com.qkl.wallet.vo.out.CreateWalletResponse;
 import org.junit.Test;
-import org.reactivestreams.Subscription;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.web3j.abi.FunctionEncoder;
@@ -20,7 +19,6 @@ import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.RawTransaction;
 import org.web3j.crypto.TransactionEncoder;
 import org.web3j.protocol.Web3j;
-import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterNumber;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.tx.Contract;
@@ -29,11 +27,9 @@ import org.web3j.utils.Numeric;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.concurrent.ExecutionException;
 
 /**
  * @Author Jackies

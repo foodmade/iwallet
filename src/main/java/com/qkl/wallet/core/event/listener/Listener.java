@@ -19,12 +19,13 @@ public abstract class Listener {
     private EventService eventService;
 
     protected void callbackErrMessage(OrderModel orderModel, String errMessage) {
-        WithdrawCallback callback = new WithdrawCallback(CallbackTypeEnum.WITHDRAW_TYPE);
+        WithdrawCallback callback = new WithdrawCallback();
         callback.setStatus(false);
         callback.setMessage(errMessage);
         callback.setTrace(orderModel.getWithdraw().getTrace());
         callback.setTokenName(orderModel.getTokenName());
         callback.setAmount(orderModel.getWithdraw().getAmount().toPlainString());
+        callback.setTxnType(orderModel.getTxnType());
         eventService.addSuccessEvent(callback);
     }
 

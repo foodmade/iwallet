@@ -14,6 +14,22 @@ public class TokenConfigs {
 
     private List<TokenConfig> tokenConfigs;
 
+    public String getEthPlatformHost(){
+        return getEthTokenConfig().getChain_host();
+    }
+
+    public String getEthPlatformSecretKey(){
+        return getEthTokenConfig().getSecretKey();
+    }
+
+    public String getEthPlatformAddress(){
+        return getEthTokenConfig().getAddress();
+    }
+
+    private TokenConfig getEthTokenConfig(){
+        return tokenConfigs.get(0);
+    }
+
     @Data
     public static class TokenConfig{
         private String token_type;

@@ -1,8 +1,8 @@
 package com.qkl.wallet.job;
 
 import com.alibaba.fastjson.JSON;
-import com.qkl.wallet.common.JedisKey;
-import com.qkl.wallet.common.RedisUtil;
+import com.qkl.wallet.common.cache.JedisKey;
+import com.qkl.wallet.common.cache.RedisUtil;
 import com.qkl.wallet.common.enumeration.CallbackTypeEnum;
 import com.qkl.wallet.common.walletUtil.WalletUtils;
 import com.qkl.wallet.config.Config;
@@ -10,7 +10,6 @@ import com.qkl.wallet.domain.Confirm;
 import com.qkl.wallet.service.impl.EventService;
 import com.qkl.wallet.vo.out.WithdrawCallback;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.client.utils.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;

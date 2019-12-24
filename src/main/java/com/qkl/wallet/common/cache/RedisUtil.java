@@ -1,4 +1,4 @@
-package com.qkl.wallet.common;
+package com.qkl.wallet.common.cache;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;

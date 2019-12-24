@@ -2,8 +2,8 @@ package com.qkl.wallet.core.event.listener;
 
 import com.alibaba.fastjson.JSON;
 import com.qkl.wallet.common.Const;
-import com.qkl.wallet.common.JedisKey;
-import com.qkl.wallet.common.RedisUtil;
+import com.qkl.wallet.common.cache.JedisKey;
+import com.qkl.wallet.common.cache.RedisUtil;
 import com.qkl.wallet.common.exception.BadRequestException;
 import com.qkl.wallet.common.walletUtil.WalletUtils;
 import com.qkl.wallet.core.event.MonitorTransactionEvent;
@@ -75,6 +75,8 @@ public class MonitorTransactionEventListener {
 
             log.debug("Chain Block Number:[{}]",transactionObject.getBlockNumber());
             log.debug("TransferObj:{}",JSON.toJSONString(transactionObject));
+            if(transactionObject.getHash().equals("0x711fb44f10a1589b65e96969ebc647509e8134f881ec688e4c610d98ce2168e0"))
+                log.info("txHash:{}",transactionObject.getHash());
 
             String input = transactionObject.getInput();
 
@@ -124,7 +126,7 @@ public class MonitorTransactionEventListener {
             //创建确认区块数任务
             createConfirmBlockNumberTask(new Confirm(transactionObject.getHash(),transactionObject.getBlockNumber().longValue(),status));
         } catch (Exception e) {
-            log.error("Token transfer handler throw error. inputStr:[{}] message:{{}}",transactionObject.getInput(),e.getMessage());
+            log.debug("Token transfer handler throw error. inputStr:[{}] message:{{}}",transactionObject.getInput(),e.getMessage());
         }
     }
 

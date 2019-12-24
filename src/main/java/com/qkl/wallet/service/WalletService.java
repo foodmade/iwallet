@@ -75,7 +75,7 @@ public interface WalletService {
      * 这个转账优先级默认最高,加入后会放到队列头
      * @param ethTransferParams 转账参数
      */
-    Boolean transferEth(EthTransferParams ethTransferParams);
+    WithdrawResponse transferEth(EthTransferParams ethTransferParams);
 
     /**
      * 获取最新一笔交易的gas费用

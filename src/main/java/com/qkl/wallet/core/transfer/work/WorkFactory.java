@@ -1,6 +1,6 @@
 package com.qkl.wallet.core.transfer.work;
 
-import com.qkl.wallet.common.RedisUtil;
+import com.qkl.wallet.common.cache.RedisUtil;
 import com.qkl.wallet.common.enumeration.TokenEventEnum;
 
 import java.util.Optional;

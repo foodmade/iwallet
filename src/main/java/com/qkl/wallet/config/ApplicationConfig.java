@@ -17,18 +17,6 @@ import javax.validation.Valid;
 @ConfigurationProperties
 @Component
 public class ApplicationConfig {
-    /**
-     * 合约地址
-     */
-    public static String contractAddress;
-    /**
-     * 链地址
-     */
-    public static String blockHost;
-    /**
-     * 秘钥
-     */
-    public static String secretKey;
 
     /**
      * keystore保存路径
@@ -53,26 +41,6 @@ public class ApplicationConfig {
      */
     public static String callBackHost;
 
-    /**
-     * 系统默认ETH钱包账户
-     */
-    public static String walletETHAddress;
-
-    @Value("${wallet.contract.address}")
-    public void setContractAddress(String address){
-        ApplicationConfig.contractAddress = address;
-    }
-
-    @Value("${wallet.server.host}")
-    public void setBlockHost(String host){
-        ApplicationConfig.blockHost = host;
-    }
-
-    @Value("${wallet.account.secretKey}")
-    public void setSecret(String secretKey){
-        ApplicationConfig.secretKey = secretKey;
-    }
-
     @Value("${wallet.keystore.path}")
     public void setWallPath(String path){
         ApplicationConfig.wallPath = path;
@@ -96,10 +64,5 @@ public class ApplicationConfig {
     @Value("${host.callback}")
     public void setCallBackHost(String callBackHost) {
         ApplicationConfig.callBackHost = callBackHost;
-    }
-
-    @Value("${wallet.eth.address}")
-    public void setWalletETHAddress(String walletETHAddress) {
-        ApplicationConfig.walletETHAddress = walletETHAddress;
     }
 }

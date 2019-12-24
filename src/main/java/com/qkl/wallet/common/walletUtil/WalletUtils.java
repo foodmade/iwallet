@@ -2,8 +2,8 @@ package com.qkl.wallet.common.walletUtil;
 
 import com.alibaba.fastjson.JSON;
 import com.qkl.wallet.common.Const;
-import com.qkl.wallet.common.JedisKey;
-import com.qkl.wallet.common.RedisUtil;
+import com.qkl.wallet.common.cache.JedisKey;
+import com.qkl.wallet.common.cache.RedisUtil;
 import com.qkl.wallet.common.SpringContext;
 import com.qkl.wallet.common.enumeration.CallbackTypeEnum;
 import com.qkl.wallet.common.enumeration.ExceptionEnum;
@@ -17,7 +17,6 @@ import com.qkl.wallet.core.manage.OrderManage;
 import com.qkl.wallet.core.manage.ScriptManage;
 import com.qkl.wallet.domain.InputData;
 import com.qkl.wallet.domain.RawTransactionResEntity;
-import com.qkl.wallet.service.WalletService;
 import com.qkl.wallet.service.impl.EventService;
 import com.qkl.wallet.vo.in.WithdrawRequest;
 import com.qkl.wallet.vo.out.CreateWalletResponse;
@@ -26,10 +25,8 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.TypeDecoder;
-import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Function;
-import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.RawTransaction;
@@ -38,12 +35,8 @@ import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
-import org.web3j.protocol.core.methods.response.EthTransaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
-import org.web3j.tx.Transfer;
-import org.web3j.tx.gas.DefaultGasProvider;
-import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
 
 import java.io.IOException;
@@ -53,7 +46,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.concurrent.ExecutionException;
 
 /**
  * @Author Jackies

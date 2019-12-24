@@ -105,17 +105,18 @@ public class WalletServiceImpl implements WalletService {
     }
 
     @Override
-    public Boolean transferEth(EthTransferParams ethTransferParams) {
+    public WithdrawResponse transferEth(EthTransferParams ethTransferParams) {
         //组装任务参数,添加至任务队列,统一使用监听器执行模式
         WithdrawParams params = assemblyWithdrawModel(ethTransferParams);
         OrderManage.addChainOrder(params);
-        return true;
+        return new WithdrawResponse("");
     }
 
     private WithdrawParams assemblyWithdrawModel(EthTransferParams ethTransferParams) {
         WithdrawParams params = new WithdrawParams();
         params.setChain(ChainEnum.ETH.getChainName());
-        params.setTokenName(null);
+        params.setTokenName(ChainEnum.ETH.getChainName());
+        params.setTxnType(CallbackTypeEnum.DRAW_TYPE.getType());
 
         WithdrawRequest request = new WithdrawRequest(ethTransferParams.getToAddress(),ethTransferParams.getAmount(),ethTransferParams.getTrace());
         params.setRequest(Collections.singletonList(request));
@@ -177,7 +178,7 @@ public class WalletServiceImpl implements WalletService {
 
     @Override
     public Boolean transferEth(String toAddress, BigDecimal amount) {
-        transferEth(ApplicationConfig.walletETHAddress,toAddress,amount,ApplicationConfig.secretKey);
+        transferEth(tokenConfigs.getEthPlatformAddress(),toAddress,amount,tokenConfigs.getEthPlatformSecretKey());
         return true;
     }
 
@@ -185,7 +186,7 @@ public class WalletServiceImpl implements WalletService {
     public Boolean transferEth(String fromAddress, String toAddress, BigDecimal amount) {
         if(fromAddress == null){
             //如果打款地址是空,则默认使用平台钱包地址打款
-            fromAddress = ApplicationConfig.walletETHAddress;
+            fromAddress = tokenConfigs.getEthPlatformAddress();
         }
         //根据钱包地址查找对应的秘钥
         String secretKey = walletService.foundTokenSecretKey(fromAddress);
@@ -367,11 +368,6 @@ public class WalletServiceImpl implements WalletService {
             }
         }
         return null;
-    }
-
-    private BigInteger getTokenBalanceOfAddress(String address) throws ExecutionException, InterruptedException {
-        Token myToken = LightWallet.loadTokenClient(web3j);
-        return myToken.balanceOf(address).sendAsync().get();
     }
 
     public static void main(String[] args) {

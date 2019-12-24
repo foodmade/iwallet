@@ -1,8 +1,9 @@
 package com.qkl.wallet.common.tools;
 
-import com.qkl.wallet.common.RedisUtil;
+import com.qkl.wallet.common.cache.RedisUtil;
 import com.qkl.wallet.common.SpringContext;
 import com.qkl.wallet.config.Config;
+import com.qkl.wallet.config.TokenConfigs;
 import com.qkl.wallet.service.WalletService;
 import org.web3j.protocol.Web3j;
 
@@ -27,5 +28,9 @@ public class IOCUtils {
 
     public static Config getConfig() {
         return SpringContext.getBean(Config.class);
+    }
+
+    public static TokenConfigs getTokenConfigs(){
+        return SpringContext.getBean(TokenConfigs.class);
     }
 }

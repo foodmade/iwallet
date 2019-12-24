@@ -98,7 +98,7 @@ public class WalletHome {
      * 以太币之间的转账(异步方式)
      */
     @PostMapping(value = "/eth_transfer_async")
-    public ResultBean<Boolean> eth_transfer_async(@RequestBody @Valid EthTransferParams ethTransferParams){
+    public ResultBean<WithdrawResponse> eth_transfer_async(@RequestBody @Valid EthTransferParams ethTransferParams){
         return ResultBean.success(walletService.transferEth(ethTransferParams));
     }
 

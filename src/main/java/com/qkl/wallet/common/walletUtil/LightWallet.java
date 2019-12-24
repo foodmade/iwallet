@@ -1,6 +1,7 @@
 package com.qkl.wallet.common.walletUtil;
 
 import com.qkl.wallet.common.SpringContext;
+import com.qkl.wallet.common.tools.IOCUtils;
 import com.qkl.wallet.common.walletUtil.outModel.WalletAddressInfo;
 import com.qkl.wallet.config.ApplicationConfig;
 import com.qkl.wallet.contract.Token;
@@ -69,20 +70,12 @@ public class LightWallet {
     }
 
     /**
-     * 打开合约客户端
-     */
-    public static Token loadTokenClient(Web3j web3j){
-        Credentials credentials = buildDefaultCredentials();
-        //Load contract client.
-        return Token.load(ApplicationConfig.contractAddress,web3j,credentials, Contract.GAS_PRICE,Contract.GAS_LIMIT);
-    }
-
-    /**
      * 加载默认钱包证书
      */
     public static Credentials buildDefaultCredentials(){
-        log.info("使用默认钱包秘钥生成证书:[{}]",ApplicationConfig.secretKey);
-        return buildCredentials(ApplicationConfig.secretKey);
+        String defaultSecretKey = IOCUtils.getTokenConfigs().getEthPlatformSecretKey();
+        log.info("使用默认钱包秘钥生成证书:[{}]", defaultSecretKey);
+        return buildCredentials(defaultSecretKey);
     }
 
     public static Credentials buildCredentials(String secretKey){

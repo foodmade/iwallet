@@ -1,4 +1,4 @@
-package com.qkl.wallet.common;
+package com.qkl.wallet.common.cache;
 
 import java.lang.management.BufferPoolMXBean;
 
@@ -40,6 +40,9 @@ public class JedisKey {
 
     //交易的确认数详细信息缓存
     public static final String _CONFIRM_HASH_INFO = "_CONFIRM_HASH_INFO";
+
+    //Token配置文件
+    public static final String _TOKEN_CONFIG_KEY = "_TOKEN_CONFIG";
 
     /**
      * Build wallet order cache key.

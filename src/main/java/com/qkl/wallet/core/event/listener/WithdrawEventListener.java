@@ -3,9 +3,7 @@ package com.qkl.wallet.core.event.listener;
 import com.alibaba.fastjson.JSON;
 import com.qkl.wallet.common.BeanUtils;
 import com.qkl.wallet.common.HttpUtils;
-import com.qkl.wallet.common.RedisUtil;
 import com.qkl.wallet.common.enumeration.Status;
-import com.qkl.wallet.config.ApplicationConfig;
 import com.qkl.wallet.core.event.WithdrawEvent;
 import com.qkl.wallet.service.TransactionManageService;
 import com.qkl.wallet.vo.out.WithdrawCallback;
@@ -14,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 import java.util.Optional;

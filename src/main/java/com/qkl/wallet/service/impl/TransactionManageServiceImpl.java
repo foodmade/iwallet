@@ -1,8 +1,8 @@
 package com.qkl.wallet.service.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.qkl.wallet.common.JedisKey;
-import com.qkl.wallet.common.RedisUtil;
+import com.qkl.wallet.common.cache.JedisKey;
+import com.qkl.wallet.common.cache.RedisUtil;
 import com.qkl.wallet.service.TransactionManageService;
 import com.qkl.wallet.vo.in.WithdrawRequest;
 import org.springframework.beans.factory.annotation.Autowired;
