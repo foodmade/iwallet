@@ -39,4 +39,11 @@ public class WithdrawRequest implements Serializable {
         this.amount = amount;
         this.trace = trace;
     }
+
+    public WithdrawRequest(String fromAddress,String toaddress, BigDecimal amount, String trace){
+        this.address = address;
+        this.amount = amount;
+        this.trace = trace;
+        this.fromAddress = fromAddress;
+    }
 }

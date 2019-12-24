@@ -17,6 +17,7 @@ import com.qkl.wallet.core.manage.OrderManage;
 import com.qkl.wallet.core.manage.ScriptManage;
 import com.qkl.wallet.domain.InputData;
 import com.qkl.wallet.domain.RawTransactionResEntity;
+import com.qkl.wallet.service.WalletService;
 import com.qkl.wallet.service.impl.EventService;
 import com.qkl.wallet.vo.in.WithdrawRequest;
 import com.qkl.wallet.vo.out.CreateWalletResponse;
@@ -63,10 +64,10 @@ public class WalletUtils {
      * @return 当前交易的nonce索引
      */
     public static RawTransactionResEntity offlineTransferToken(String contractAddress, String toAddress, BigInteger amount,String fromAddress) throws Exception {
-//        BigInteger GAS_PRICE =  SpringContext.getBean(WalletService.class).getGasPrice().getGasPrice();
-        BigInteger GAS_PRICE =  Contract.GAS_PRICE;
+        BigInteger GAS_PRICE =  SpringContext.getBean(WalletService.class).getGasPrice().getGasPrice();
+//        BigInteger GAS_PRICE =  Contract.GAS_PRICE;
 //        BigInteger GAS_LIMIT =  Contract.GAS_LIMIT;
-        BigInteger GAS_LIMIT =  BigInteger.valueOf(42000);
+        BigInteger GAS_LIMIT =  BigInteger.valueOf(76819);
 
         Function function = new Function(
                 Owc.FUNC_TRANSFER,

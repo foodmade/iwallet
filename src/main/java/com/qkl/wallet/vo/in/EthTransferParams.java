@@ -14,7 +14,6 @@ import java.math.BigDecimal;
 @Data
 public class EthTransferParams {
 
-    @NotNull(message = "收款地址不能为空")
     private String toAddress;
 
     @NotNull(message = "交易金额不能为空")

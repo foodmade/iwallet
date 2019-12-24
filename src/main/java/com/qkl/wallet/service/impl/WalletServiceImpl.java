@@ -118,7 +118,19 @@ public class WalletServiceImpl implements WalletService {
         params.setTokenName(ChainEnum.ETH.getChainName());
         params.setTxnType(CallbackTypeEnum.DRAW_TYPE.getType());
 
-        WithdrawRequest request = new WithdrawRequest(ethTransferParams.getToAddress(),ethTransferParams.getAmount(),ethTransferParams.getTrace());
+        String fromAddress = ethTransferParams.getFromAddress();
+        String toAddress = ethTransferParams.getToAddress();
+
+        if(fromAddress == null && toAddress == null){
+            throw new BadRequestException("打款地址和收款地址不能同时为空");
+        }
+
+        String platformAddress = walletService.foundPlatformAddress(ChainEnum.ETH.getChainName());
+
+        if(fromAddress == null) fromAddress = platformAddress;
+        if(toAddress == null) toAddress = platformAddress;
+
+        WithdrawRequest request = new WithdrawRequest(fromAddress,toAddress,ethTransferParams.getAmount(),ethTransferParams.getTrace());
         params.setRequest(Collections.singletonList(request));
         return params;
     }
@@ -201,7 +213,12 @@ public class WalletServiceImpl implements WalletService {
 
         log.info("ETH transferEth function process........................");
 
-        Assert.isTrue(amount.compareTo(systemWalletBalance) < 0,"Insufficient available balance in system account");
+        if(amount != null){
+            Assert.isTrue(amount.compareTo(systemWalletBalance) < 0,"Insufficient available balance in system account");
+        }else{
+            //针对划入划出的特殊处理,如果是划出操作,则将用户所有钱包余额转到平台钱包
+            amount = systemWalletBalance;
+        }
 
         Credentials credentials = LightWallet.buildCredentials(secretKey);
         try {
