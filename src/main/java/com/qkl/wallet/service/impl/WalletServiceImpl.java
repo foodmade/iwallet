@@ -230,7 +230,7 @@ public class WalletServiceImpl implements WalletService {
         try {
             ethGasPrice = getGasPrice();
             log.info("获取到的gas:{}", ethGasPrice.getGasPrice());
-            return new GasResponse(WalletUtils.unitEthCover(ethGasPrice.getGasPrice()));
+            return new GasResponse(WalletUtils.unitEthCover(ethGasPrice.getGasPrice().multiply(Const._GAS_LIMIT)));
         } catch (Exception e) {
             log.error("Get eth recent gas price throw error. message:[{}]",e.getMessage());
             throw new BadRequestException(e.getMessage());
@@ -332,6 +332,9 @@ public class WalletServiceImpl implements WalletService {
         List<TokenConfigs.TokenConfig> configs = tokenConfigs.getTokenConfigs();
 
         for (TokenConfigs.TokenConfig config : configs) {
+            if(!config.getValid()){
+                continue;
+            }
             if(config.getAddress().equals(address)){
                 return config.getSecretKey();
             }
@@ -423,5 +426,10 @@ public class WalletServiceImpl implements WalletService {
             }
         }
         return null;
+    }
+
+    @Override
+    public BigInteger getTotalGasPrice() {
+        return getGasPrice().getGasPrice().multiply(Const._GAS_LIMIT);
     }
 }

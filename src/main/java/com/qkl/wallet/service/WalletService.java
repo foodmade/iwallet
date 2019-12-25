@@ -13,6 +13,7 @@ import org.web3j.protocol.core.methods.response.EthTransaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
 public interface WalletService {
 
@@ -142,4 +143,11 @@ public interface WalletService {
      * 通过币种获取对应的小数位数
      */
     Long foundDecimalsByTokenName(String tokenName);
+
+    /**
+     * 获取推荐燃油费 (总量 limit * price) Bigint
+     */
+    BigInteger getTotalGasPrice();
+
+
 }
