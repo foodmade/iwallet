@@ -6,7 +6,6 @@ import com.qkl.wallet.common.cache.JedisKey;
 import com.qkl.wallet.common.cache.RedisUtil;
 import com.qkl.wallet.common.okHttp.HttpServiceEx;
 import com.qkl.wallet.common.tools.JsonReadUtils;
-import com.qkl.wallet.config.ApplicationConfig;
 import com.qkl.wallet.config.Config;
 import com.qkl.wallet.config.TokenConfigs;
 import lombok.extern.slf4j.Slf4j;
@@ -25,9 +24,25 @@ import java.io.IOException;
 public class BeanStruct {
 
     @Autowired
-    private ApplicationConfig applicationConfig;
-    @Autowired
     private RedisUtil redisUtil;
+    @Autowired
+    private TokenConfigs tokenConfigs;
+
+    @Bean("tokenConfigs")
+    @Order(-100)
+    public TokenConfigs readTokenJsonConfig() {
+        try {
+            //Token配置文件改造为放入redis
+            Object tokenObj = redisUtil.get(JedisKey._TOKEN_CONFIG_KEY);
+            TokenConfigs tokenConfigs = JSON.parseObject(tokenObj.toString(),TokenConfigs.class);
+            log.info("Token json load successful. \n Token json:[{}]", JSON.toJSONString(tokenConfigs));
+            return tokenConfigs;
+        } catch (Exception e) {
+            log.error("Serious warning::::: \t Already found token json file. But read this file failed. throw error message:[{}]",e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
+    }
 
     /**
      * web3j client bean init.
@@ -35,7 +50,7 @@ public class BeanStruct {
     @Bean
     @DependsOn("tokenConfigs")
     public Web3j initWeb3jClient() {
-        String ethHost = ((TokenConfigs)SpringContext.getBean("tokenConfigs")).getEthPlatformHost();
+        String ethHost = tokenConfigs.getEthPlatformHost();
         Web3j web3j = Web3j.build(new HttpServiceEx(ethHost));
         Web3ClientVersion web3ClientVersion;
         try {
@@ -49,22 +64,6 @@ public class BeanStruct {
             e.printStackTrace();
         }
         return web3j;
-    }
-
-    @Bean("tokenConfigs")
-    @Order(1)
-    public TokenConfigs readTokenJsonConfig() {
-        try {
-            //Token配置文件改造为放入redis
-            Object tokenObj = redisUtil.get(JedisKey._TOKEN_CONFIG_KEY);
-            TokenConfigs tokenConfigs = JSON.parseObject(tokenObj.toString(),TokenConfigs.class);
-            log.info("Token json load successful. \n Token json:[{}]", JSON.toJSONString(tokenConfigs));
-            return tokenConfigs;
-        } catch (Exception e) {
-            log.error("Serious warning::::: \t Already found token json file. But read this file failed. throw error message:[{}]",e.getMessage());
-            e.printStackTrace();
-            throw e;
-        }
     }
 
     @Bean

@@ -44,7 +44,6 @@ public class ChainConfiguration {
     @Autowired
     private Config config;
 
-    @PostConstruct
     public void initializationContractConfiguration() throws Exception {
         //初始化区块基数(这个块高度只会初始化一次,以后需要回查账本的时候,就使用此区块高度为起点)
         initializationStartBlockNumber();

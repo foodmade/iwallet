@@ -25,7 +25,6 @@ public class InitParamsConfiguration {
     @Autowired
     private RedisUtil redisUtil;
 
-    @PostConstruct
     public void initParamsConfig(){
         //所有的基本参数配置都从这儿写入,配置来源于config.json
         WalletUtils.initBasisConfig(config,redisUtil);
