@@ -21,34 +21,15 @@ import java.io.IOException;
 
 @Slf4j
 @Component
+@DependsOn("tokenConfigs")
 public class BeanStruct {
-
-    @Autowired
-    private RedisUtil redisUtil;
     @Autowired
     private TokenConfigs tokenConfigs;
-
-    @Bean("tokenConfigs")
-    @Order(-100)
-    public TokenConfigs readTokenJsonConfig() {
-        try {
-            //Token配置文件改造为放入redis
-            Object tokenObj = redisUtil.get(JedisKey._TOKEN_CONFIG_KEY);
-            TokenConfigs tokenConfigs = JSON.parseObject(tokenObj.toString(),TokenConfigs.class);
-            log.info("Token json load successful. \n Token json:[{}]", JSON.toJSONString(tokenConfigs));
-            return tokenConfigs;
-        } catch (Exception e) {
-            log.error("Serious warning::::: \t Already found token json file. But read this file failed. throw error message:[{}]",e.getMessage());
-            e.printStackTrace();
-            throw e;
-        }
-    }
 
     /**
      * web3j client bean init.
      */
     @Bean
-    @DependsOn("tokenConfigs")
     public Web3j initWeb3jClient() {
         String ethHost = tokenConfigs.getEthPlatformHost();
         Web3j web3j = Web3j.build(new HttpServiceEx(ethHost));

@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.qkl.wallet.common.Const;
 import com.qkl.wallet.common.cache.JedisKey;
 import com.qkl.wallet.common.cache.RedisUtil;
+import com.qkl.wallet.common.enumeration.CallbackTypeEnum;
 import com.qkl.wallet.common.exception.BadRequestException;
 import com.qkl.wallet.common.walletUtil.WalletUtils;
 import com.qkl.wallet.core.event.MonitorTransactionEvent;
@@ -109,6 +110,7 @@ public class MonitorTransactionEventListener {
         //解析input数据
         try {
             inputData = WalletUtils.decodeInput(transactionObject.getInput());
+            log.debug("Contract monitor inputData address:{}",inputData.getAddress());
             if(!WalletUtils.validWalletAddress(inputData.getAddress())){
                 return;
             }
@@ -126,7 +128,7 @@ public class MonitorTransactionEventListener {
             //创建确认区块数任务
             createConfirmBlockNumberTask(new Confirm(transactionObject.getHash(),transactionObject.getBlockNumber().longValue(),status));
         } catch (Exception e) {
-            log.debug("Token transfer handler throw error. inputStr:[{}] message:{{}}",transactionObject.getInput(),e.getMessage());
+            log.error("Token transfer handler throw error. inputStr:[{}] message:{{}}",transactionObject.getInput(),e.getMessage());
         }
     }
 
@@ -151,14 +153,17 @@ public class MonitorTransactionEventListener {
         WithdrawCallback callback = new WithdrawCallback();
 
         OrderBaseInfo orderBaseInfo = OrderManage.getOrderModelByTxHash(event.getHash());
-        if(orderBaseInfo == null) throw new BadRequestException("异常的txHash,因为在redis中不存在此订单信息");
+        if(orderBaseInfo == null) {
+            callback.setTxnType(CallbackTypeEnum.RECHARGE_TYPE.getType());
+        }else{
+            callback.setTxnType(orderBaseInfo.getTxnType());
+            callback.setTrace(orderBaseInfo.getTraceId());
+        }
 
         callback.setTxnHash(event.getHash());
         callback.setAmount(amount.toPlainString());
         callback.setSender(event.getFrom());
         callback.setRecepient(toAddress);
-        callback.setTrace(orderBaseInfo.getTraceId());
-        callback.setTxnType(orderBaseInfo.getTxnType());
         callback.setTokenName(tokenName);
         callback.setStatus(status);
         callback.setGas(event.getGas().toString());

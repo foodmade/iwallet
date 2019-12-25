@@ -108,7 +108,6 @@ public class WalletHome {
      */
     @PostMapping(value = "/get_eth_gas")
     public ResultBean<GasResponse> getEthGas(){
-        walletService.getEthGasResponse();
         return ResultBean.success(walletService.getEthGasResponse());
     }
 

@@ -67,7 +67,7 @@ public class WalletUtils {
         BigInteger GAS_PRICE =  SpringContext.getBean(WalletService.class).getGasPrice().getGasPrice();
 //        BigInteger GAS_PRICE =  Contract.GAS_PRICE;
 //        BigInteger GAS_LIMIT =  Contract.GAS_LIMIT;
-        BigInteger GAS_LIMIT =  BigInteger.valueOf(76819);
+        BigInteger GAS_LIMIT =  BigInteger.valueOf(100000);
 
         Function function = new Function(
                 Owc.FUNC_TRANSFER,

@@ -208,17 +208,6 @@ public class WalletServiceImpl implements WalletService {
 
     @Override
     public TransactionReceipt transferEth(String fromAddress, String toAddress, BigDecimal amount, String secretKey) {
-        //Valid system wallet account balance is it enough.
-        BigDecimal systemWalletBalance = getETHBalance(fromAddress).getBalance();
-
-        log.info("ETH transferEth function process........................");
-
-        if(amount != null){
-            Assert.isTrue(amount.compareTo(systemWalletBalance) < 0,"Insufficient available balance in system account");
-        }else{
-            //针对划入划出的特殊处理,如果是划出操作,则将用户所有钱包余额转到平台钱包
-            amount = systemWalletBalance;
-        }
 
         Credentials credentials = LightWallet.buildCredentials(secretKey);
         try {
@@ -241,7 +230,7 @@ public class WalletServiceImpl implements WalletService {
         try {
             ethGasPrice = getGasPrice();
             log.info("获取到的gas:{}", ethGasPrice.getGasPrice());
-            return new GasResponse(WalletUtils.unitCover(ethGasPrice.getGasPrice()));
+            return new GasResponse(WalletUtils.unitEthCover(ethGasPrice.getGasPrice()));
         } catch (Exception e) {
             log.error("Get eth recent gas price throw error. message:[{}]",e.getMessage());
             throw new BadRequestException(e.getMessage());
