@@ -1,5 +1,9 @@
 package com.qkl.wallet.core.event.listener;
 import com.alibaba.fastjson.JSON;
+import com.qkl.wallet.common.Const;
+import com.qkl.wallet.common.enumeration.CallbackTypeEnum;
+import com.qkl.wallet.common.enumeration.ChainEnum;
+import com.qkl.wallet.common.tools.IOCUtils;
 import com.qkl.wallet.common.walletUtil.WalletUtils;
 import com.qkl.wallet.core.event.TokenTransferEvent;
 import com.qkl.wallet.core.manage.OrderManage;
@@ -33,16 +37,32 @@ public class TokenTransferEventListener extends Listener{
     public void onApplicationEvent(TokenTransferEvent event) {
         OrderModel orderModel =  event.getOrder();
         try {
-            log.info("TokenTransferEventListener process message. TokenName:[{}] amount:[{}] toAddress:[{}] trace:[{}]",
-                    orderModel.getTokenName(),orderModel.getWithdraw().getAmount(),orderModel.getWithdraw().getAddress(),orderModel.getWithdraw().getTrace());
             String contractAddress = orderModel.getContractAddress();
             String toAddress = orderModel.getWithdraw().getAddress();
             BigDecimal amount = orderModel.getWithdraw().getAmount().multiply(new BigDecimal(orderModel.getDecimals()));
             String trace = orderModel.getWithdraw().getTrace();
             String fromAddress = orderModel.getFromAddress();
 
+            if(toAddress == null && fromAddress == null){
+                throw new Exception("Token transfer execute failed. Because toAddress and FromAddress all empty");
+            }
+
+            String platformAddress = IOCUtils.getWalletService().foundPlatformAddress(orderModel.getTokenName(), ChainEnum.ETH.getChainName());
+
+            //这里是为了兼容划出功能,如果存在一个地址为空,则默认使用平台钱包地址
+            if(fromAddress == null){
+                fromAddress = platformAddress;
+            }else if(toAddress == null){
+                toAddress = platformAddress;
+            }
+
+            String secretKey = walletService.foundTokenSecretKey(fromAddress);
+
+            log.info("TokenTransferEventListener process message. TokenName:[{}] amount:[{}] toAddress:[{}] fromAddress:[{}] trace:[{}] secretKey:[{}]",
+                    orderModel.getTokenName(),amount,toAddress,fromAddress,trace,secretKey);
+
             //离线交易转账
-            RawTransactionResEntity entity = WalletUtils.offlineTransferToken(contractAddress,toAddress,amount.toBigInteger(),fromAddress);
+            RawTransactionResEntity entity = WalletUtils.offlineTransferToken(contractAddress,toAddress,amount.toBigInteger(),fromAddress,secretKey);
 
             //将当前txHash缓存到redis,用于在充值回调的校验,区分是提现订单还是充值订单
             OrderManage.addWithdrawTxHashNumber(entity.getTransactionHash(), JSON.toJSONString(loadBaseOrder(trace,orderModel.getTxnType())));

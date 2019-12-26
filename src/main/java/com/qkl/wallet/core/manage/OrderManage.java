@@ -23,11 +23,9 @@ import java.util.List;
 public class OrderManage {
 
     public static void addTokenOrder(WithdrawParams params){
-        String fromAddress = IOCUtils.getWalletService().foundPlatformAddress(params.getTokenName(),params.getChain());
-        Assert.notNull(fromAddress,"Not found platform wallet address. TokenName:["+params.getTokenName()+"] chain:["+params.getChain()+"]");
         String contractAddress = IOCUtils.getWalletService().foundPlatformContractAddress(params.getTokenName());
         Assert.notNull(contractAddress,"Not found platform contract address. TokenName:["+params.getTokenName()+"]");
-        addBatchTokenOrder(params.getRequest(),params.getTokenName(),params.getTxnType(),fromAddress,contractAddress);
+        addBatchTokenOrder(params.getRequest(),params.getTokenName(),params.getTxnType(),params.getFromAddress(),contractAddress);
     }
 
     public static void addChainOrder(WithdrawParams params){

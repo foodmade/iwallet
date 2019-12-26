@@ -14,6 +14,8 @@ public class WithdrawParams {
 
     private String chain;
 
+    private String fromAddress;
+
     @NotNull(message = "请指定交易类型 txnType")
     private String txnType;
 

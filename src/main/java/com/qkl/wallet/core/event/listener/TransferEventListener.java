@@ -59,11 +59,15 @@ public class TransferEventListener extends Listener{
 
             log.info("ETH transferEth function process........................");
 
+            BigDecimal gasPrice = WalletUtils.unitEthCover(gas);
+
             if(new BigDecimal(-1).compareTo(amount) < 0){
+                log.info("platform wallet transfer to people wallet. Platform balance:[{}] transfer amount:[{}]",systemWalletBalance,amount);
                 Assert.isTrue(amount.compareTo(systemWalletBalance) < 0,"Insufficient available balance in system account");
             }else{
+                log.info("People wallet transfer to platform wallet. People wallet balance:[{}] gas:[{}]",systemWalletBalance,gasPrice);
                 //针对划入划出的特殊处理,如果是划出操作,则将用户所有钱包余额转到平台钱包
-                amount = systemWalletBalance.subtract(new BigDecimal(gas.divide(Const._ETH_TOKEN_UNIT)));
+                amount = systemWalletBalance.subtract(gasPrice);
             }
 
             BigInteger nonce = WalletUtils.getNonce(fromAddress);

@@ -63,10 +63,8 @@ public class WalletUtils {
      * @param amount            转账金额
      * @return 当前交易的nonce索引
      */
-    public static RawTransactionResEntity offlineTransferToken(String contractAddress, String toAddress, BigInteger amount,String fromAddress) throws Exception {
+    public static RawTransactionResEntity offlineTransferToken(String contractAddress, String toAddress, BigInteger amount,String fromAddress,String secretKey) throws Exception {
         BigInteger GAS_PRICE =  SpringContext.getBean(WalletService.class).getGasPrice().getGasPrice();
-//        BigInteger GAS_PRICE =  Contract.GAS_PRICE;
-//        BigInteger GAS_LIMIT =  Contract.GAS_LIMIT;
         BigInteger GAS_LIMIT =  Const._GAS_LIMIT;
 
         Function function = new Function(
@@ -79,14 +77,14 @@ public class WalletUtils {
 
         BigDecimal then = WalletUtils.unitEthCover(GAS_LIMIT.multiply(GAS_PRICE));
 
-        log.info("GAS_PRICE:[{}] GAS_LIMIT:[{}] GAS_TOTAL:[{}] nonce:[{}]",GAS_PRICE,GAS_LIMIT,then,nonce);
+        log.info("Token transfer info. GAS_PRICE:[{}] GAS_LIMIT:[{}] GAS_TOTAL:[{}] nonce:[{}]",GAS_PRICE,GAS_LIMIT,then,nonce);
 
         RawTransaction rawTransaction = RawTransaction.createTransaction(nonce,
                 GAS_PRICE,
                 GAS_LIMIT,
                 contractAddress, encodedFunction);
 
-        Credentials credentials = LightWallet.buildDefaultCredentials();
+        Credentials credentials = LightWallet.buildCredentials(secretKey);
 
         //签名Transaction，这里要对交易做签名
         byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, credentials);
@@ -238,7 +236,7 @@ public class WalletUtils {
             ethGetTransactionCount = IOCUtils.getWeb3j().ethGetTransactionCount(
                     address, DefaultBlockParameterName.LATEST).sendAsync().get();
             BigInteger nonce = ethGetTransactionCount.getTransactionCount();
-            return nonce.compareTo(BigInteger.ZERO) == 0 ? new BigInteger("1") : nonce;
+            return nonce;
         } catch (Exception e) {
             log.error("获取交易随机数(nonce)异常 message:{}",e.getMessage());
             return null;

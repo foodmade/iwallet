@@ -139,7 +139,6 @@ public class WalletServiceImpl implements WalletService {
     private boolean validOrderRequest(WithdrawParams params) {
         for (WithdrawRequest withdrawRequest : params.getRequest()) {
             try {
-                Assert.notNull(withdrawRequest.getAddress(), "Transfer to address must not be null.");
                 Assert.notNull(withdrawRequest.getAmount(), "Transfer amount must not be null.");
                 Assert.isTrue(withdrawRequest.getAmount().compareTo(BigDecimal.ZERO) > 0, "Negative or zero amount are not allowed");
             } catch (Exception e) {
@@ -208,6 +207,8 @@ public class WalletServiceImpl implements WalletService {
 
     @Override
     public TransactionReceipt transferEth(String fromAddress, String toAddress, BigDecimal amount, String secretKey) {
+
+        log.info("Request eth transfer. fromAddress:[{}] toAddress:[{}] amount:[{}] secretKey:[{}]",fromAddress,toAddress,amount,secretKey);
 
         Credentials credentials = LightWallet.buildCredentials(secretKey);
         try {
