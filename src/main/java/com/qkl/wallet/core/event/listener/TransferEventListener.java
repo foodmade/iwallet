@@ -1,6 +1,7 @@
 package com.qkl.wallet.core.event.listener;
 
 import com.alibaba.fastjson.JSON;
+import com.qkl.wallet.common.Const;
 import com.qkl.wallet.common.tools.IOCUtils;
 import com.qkl.wallet.common.walletUtil.LightWallet;
 import com.qkl.wallet.common.walletUtil.WalletUtils;
@@ -40,14 +41,21 @@ public class TransferEventListener extends Listener{
                     orderModel.getTokenName(), orderModel.getWithdraw().getAddress(), orderModel.getWithdraw().getTrace());
 
             String toAddress = orderModel.getWithdraw().getAddress();
-            String fromAddress = orderModel.getFromAddress();
+            String fromAddress = orderModel.getWithdraw().getFromAddress();
+
             BigDecimal amount = orderModel.getWithdraw().getAmount();
+
             String secretKey = walletService.foundTokenSecretKey(fromAddress);
             String trace = orderModel.getWithdraw().getTrace();
+
+            BigInteger gas = walletService.getTotalGasPrice();
 
 
             //Valid system wallet account balance is it enough.
             BigDecimal systemWalletBalance = walletService.getETHBalance(fromAddress).getBalance();
+
+            //Check whether the balance is sufficient
+            Assert.isTrue((gas.compareTo(systemWalletBalance.toBigInteger()) > 0),"insufficient gas");
 
             log.info("ETH transferEth function process........................");
 
@@ -55,7 +63,7 @@ public class TransferEventListener extends Listener{
                 Assert.isTrue(amount.compareTo(systemWalletBalance) < 0,"Insufficient available balance in system account");
             }else{
                 //针对划入划出的特殊处理,如果是划出操作,则将用户所有钱包余额转到平台钱包
-                amount = systemWalletBalance;
+                amount = systemWalletBalance.subtract(new BigDecimal(gas.divide(Const._ETH_TOKEN_UNIT)));
             }
 
             BigInteger nonce = WalletUtils.getNonce(fromAddress);
