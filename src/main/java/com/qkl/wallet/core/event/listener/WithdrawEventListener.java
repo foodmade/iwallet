@@ -23,7 +23,7 @@ public class WithdrawEventListener {
     @Autowired
     private TransactionManageService transactionManageService;
 
-    private static final String callbackUrl = "http://172.26.7.47:8089/admin/finance/callbackWallet";
+    private static final String callbackUrl = "http://172.26.7.47:8189/admin/financeManage/callbackWallet";
 
     @EventListener
     public void onApplicationEvent(WithdrawEvent event) {
