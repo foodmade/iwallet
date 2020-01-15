@@ -76,8 +76,6 @@ public class MonitorTransactionEventListener {
 
             log.debug("Chain Block Number:[{}]",transactionObject.getBlockNumber());
             log.debug("TransferObj:{}",JSON.toJSONString(transactionObject));
-            if(transactionObject.getHash().equals("0x711fb44f10a1589b65e96969ebc647509e8134f881ec688e4c610d98ce2168e0"))
-                log.info("txHash:{}",transactionObject.getHash());
 
             String input = transactionObject.getInput();
 
