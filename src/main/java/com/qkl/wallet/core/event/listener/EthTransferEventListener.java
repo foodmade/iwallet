@@ -27,7 +27,7 @@ import java.math.BigInteger;
  **/
 @Component
 @Slf4j
-public class TransferEventListener extends Listener{
+public class EthTransferEventListener extends Listener{
 
     @Autowired
     private WalletService walletService;

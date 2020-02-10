@@ -153,14 +153,22 @@ public class WalletUtils {
     }
 
     /**
+     * 因为兼顾充值和提现2种类型
+     * 1 充值判断逻辑 --> 判断walletAddress是否由本钱包服务创建
+     * 2 提现判断逻辑 --> 判断txHash是否存在于缓存中
+     *
+     * 所以,判断监听到的订单是否属于本钱包服务创建,只需要判断交易hash是否存在 或者 收款地址属于本钱包服务创建
+     *
      * 检查钱包地址是否属于当前钱包服务创建
-     * @param walletAddress ETH钱包地址
+     * @param txHash 订单交易hash
+     * @param walletAddress 交易的钱包地址(接收地址)
      */
-    public static boolean validWalletAddress(String walletAddress){
-        if(walletAddress == null){
+    public static boolean validTransferOrder(String txHash,String walletAddress){
+        if(walletAddress == null && txHash == null){
             return false;
         }
-        return IOCUtils._Get_Redis().hHasKey(JedisKey.buildWalletAddressKey(),walletAddress);
+
+        return IOCUtils._Get_Redis().hHasKey(JedisKey.buildWalletAddressKey(),walletAddress) || OrderManage.getOrderModelByTxHash(txHash) != null;
     }
 
     /**

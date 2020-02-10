@@ -69,7 +69,7 @@ public class HubServiceImpl implements HubService {
         }
 
         //由于ETH的交易是通过block监听,这是属于共有块,所以有可能监控到的不是此服务器发起的交易,这儿只接受从此钱包服务创建的钱包地址交易
-        if(!WalletUtils.validWalletAddress(ethTransactionReq.getTo().toLowerCase())){
+        if(!WalletUtils.validTransferOrder(null,ethTransactionReq.getTo().toLowerCase())){
             log.info("This transaction address:[{}] does not belong to the current wallet service",ethTransactionReq.getTo());
             return false;
         }

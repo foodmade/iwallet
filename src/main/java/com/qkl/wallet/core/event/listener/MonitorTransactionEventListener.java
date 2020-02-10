@@ -5,7 +5,6 @@ import com.qkl.wallet.common.Const;
 import com.qkl.wallet.common.cache.JedisKey;
 import com.qkl.wallet.common.cache.RedisUtil;
 import com.qkl.wallet.common.enumeration.CallbackTypeEnum;
-import com.qkl.wallet.common.exception.BadRequestException;
 import com.qkl.wallet.common.walletUtil.WalletUtils;
 import com.qkl.wallet.core.event.MonitorTransactionEvent;
 import com.qkl.wallet.core.manage.OrderManage;
@@ -109,7 +108,7 @@ public class MonitorTransactionEventListener {
         try {
             inputData = WalletUtils.decodeInput(transactionObject.getInput());
             log.debug("Contract monitor inputData address:{}",inputData.getAddress());
-            if(!WalletUtils.validWalletAddress(inputData.getAddress())){
+            if(!WalletUtils.validTransferOrder(transactionObject.getHash(),inputData.getAddress())){
                 return;
             }
 
@@ -131,7 +130,7 @@ public class MonitorTransactionEventListener {
     }
 
     private void ethMonitorHandler(EthBlock.TransactionObject transactionObject) {
-        if(!WalletUtils.validWalletAddress(transactionObject.getTo())){
+        if(!WalletUtils.validTransferOrder(transactionObject.getHash(),transactionObject.getTo())){
             return;
         }
 
