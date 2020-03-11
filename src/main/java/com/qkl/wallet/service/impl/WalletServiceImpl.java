@@ -238,6 +238,7 @@ public class WalletServiceImpl implements WalletService {
         }
     }
 
+    @Override
     public EthGasPrice getGasPrice() {
         try {
             return web3j.ethGasPrice().send();

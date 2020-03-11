@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.qkl.wallet.common.BeanUtils;
 import com.qkl.wallet.common.HttpUtils;
 import com.qkl.wallet.common.enumeration.Status;
+import com.qkl.wallet.config.Config;
 import com.qkl.wallet.core.event.WithdrawEvent;
 import com.qkl.wallet.service.TransactionManageService;
 import com.qkl.wallet.vo.out.WithdrawCallback;
@@ -21,9 +22,10 @@ import java.util.Optional;
 public class WithdrawEventListener {
 
     @Autowired
-    private TransactionManageService transactionManageService;
+    private Config config;
 
-    private static final String callbackUrl = "http://172.26.7.47:8189/admin/financeManage/callbackWallet";
+    @Autowired
+    private TransactionManageService transactionManageService;
 
     @EventListener
     public void onApplicationEvent(WithdrawEvent event) {
@@ -49,7 +51,7 @@ public class WithdrawEventListener {
         log.info("Start process http request in OWC server.");
         log.info("Request body info:{}",JSON.toJSONString(event));
 
-        ResponseEntity responseEntity =  HttpUtils.postForEntity(callbackUrl,event.getCallbackResponse());
+        ResponseEntity responseEntity =  HttpUtils.postForEntity(config.getCallbackUrl(),event.getCallbackResponse());
 
         log.info("Process OWC server finish. Response info:[{}]",JSON.toJSONString(responseEntity));
     }

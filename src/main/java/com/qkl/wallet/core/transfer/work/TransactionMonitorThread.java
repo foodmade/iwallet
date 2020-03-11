@@ -16,10 +16,14 @@ import java.io.IOException;
 @Slf4j
 public class TransactionMonitorThread extends Thread{
 
-    //线程名称
+    /**
+     * 线程名称
+     */
     private static final String threadName = "TransactionMonitorThread";
 
-    //获取区块延迟个数
+    /**
+     * 获取区块延迟个数
+     */
     private Integer blockInterval;
 
     public TransactionMonitorThread(Config config) {

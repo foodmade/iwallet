@@ -10,12 +10,22 @@ import lombok.Data;
 @Data
 public class Config {
 
-    //延迟区块高度
+    /**
+     * 延迟区块高度
+     */
     private Long delayBlockNumber;
 
-    //每次同步区块的大小
+    /**
+     * 每次同步区块的大小
+     */
     private Integer BlockInterval;
 
-    //最大确认区块数
+    /**
+     * 最大确认区块数
+     */
     private Integer confirmMaxCount;
+    /**
+     * 回调地址
+     */
+    private String callbackUrl;
 }
