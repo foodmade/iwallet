@@ -2,5 +2,5 @@
   "delayBlockNumber": 20,
   "BlockInterval": 10,
   "confirmMaxCount": 20,
-  "callbackUrl": "http://172.26.146.174:9008/admin/financeManage/callbackWallet"
+  "callbackUrl": "http://172.26.146.174:8089/admin/finance/callbackWallet"
 }
